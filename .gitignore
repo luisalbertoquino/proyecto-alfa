@@ -1,0 +1,40 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+
+# --- Laravel / PHP ---
+vendor/
+.env
+.env.*
+!.env.example
+storage/*.key
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/testing/
+storage/framework/views/
+storage/app/public/
+public/storage
+bootstrap/cache/
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+
+# --- Next.js / Node ---
+node_modules/
+.next/
+out/
+.vercel
+next-env.d.ts
+
+# --- Docker ---
+docker-compose.override.yml
+
+# Build / test genéricos
+dist/
+build/
+coverage/
