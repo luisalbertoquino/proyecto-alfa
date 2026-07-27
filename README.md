@@ -75,7 +75,7 @@ La justificación de cada elección se documentará en un stack tecnológico ded
 
 ## Estado del Proyecto
 
-🚧 **Fase 1 — Fundación.** En documentación de negocio y arquitectura, previo a desarrollo de código. Repositorio en proceso de reestructuración a monorepo.
+🚧 **Fase 2 — Prototipo funcional del piloto** (sprint de 30 días, no producción). Fase 1 (fundación documental) completada. Estado detallado y siempre actualizado en [`docs/estado-actual.md`](docs/estado-actual.md).
 
 ## Roadmap
 
