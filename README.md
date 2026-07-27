@@ -51,7 +51,7 @@ proyecto-alfa/
 ├── apps/            # web (tienda), admin (panel), api  — en migración desde backend/ + frontend/
 ├── packages/        # código compartido entre apps
 ├── docs/            # documentación de arquitectura, negocio, diseño, desarrollo, research, ADRs, RFCs
-├── infrastructure/  # Docker, despliegue, configuración de servidores
+├── infrastructure/  # scripts de despliegue, configuración del servidor (OpenLiteSpeed, nativo por ahora)
 ├── database/        # esquemas, migraciones, seeders
 ├── resources/        # logos, mockups, íconos, capturas
 └── scripts/         # automatizaciones y utilidades de desarrollo
@@ -65,13 +65,13 @@ El detalle completo vive en [`docs/architecture/vision-tecnica.md`](docs/archite
 |---|---|
 | Backend / API | Laravel |
 | Frontend | Next.js |
-| Base de datos | PostgreSQL |
+| Base de datos | MySQL |
 | Cache / colas | Redis |
-| Contenedores | Docker |
+| Despliegue | Nativo (sin contenedores) — droplet con OpenLiteSpeed en esta fase de prototipo; Docker queda como opción a evaluar en fases posteriores |
 | CDN / seguridad | Cloudflare |
 | CI/CD | GitHub Actions |
 
-La justificación de cada elección se documentará en un stack tecnológico dedicado dentro de `docs/architecture/`.
+La justificación de cada elección se documentará en un stack tecnológico dedicado dentro de `docs/architecture/`. El cambio de PostgreSQL a MySQL y de Docker a despliegue nativo está documentado en [`docs/adr/ADR-002.md`](docs/adr/ADR-002.md).
 
 ## Estado del Proyecto
 
@@ -94,7 +94,7 @@ Detalle y fechas en [`docs/business/roadmap.md`](docs/business/roadmap.md) (en c
 | `backend/`, `frontend/` | Código actual de la aplicación (en migración a `apps/`) |
 | `docs/` | Documentación: arquitectura, negocio, diseño, desarrollo, research, actas, ADRs, RFCs, estándares |
 | `database/` | Esquemas y migraciones |
-| `docker/`, `infrastructure/` | Configuración de contenedores e infraestructura |
+| `infrastructure/` | Scripts de despliegue y configuración del servidor (OpenLiteSpeed, nativo por ahora) |
 | `resources/` | Logos, mockups, íconos, inspiración, capturas |
 | `scripts/` | Utilidades de desarrollo |
 

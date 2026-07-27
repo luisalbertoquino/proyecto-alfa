@@ -12,7 +12,7 @@ Para profundizar en un tema puntual, la documentación completa vive en `docs/` 
 
 ## Reglas rápidas (ya decididas, no reabrir sin pedirlo el usuario)
 
-- Stack: Laravel (API) + Next.js (web/admin) + PostgreSQL + Redis + Docker. Sin microservicios, sin otra base de datos. Ver `docs/adr/ADR-001.md`.
+- Stack: Laravel (API) + Next.js (web/admin) + MySQL + Redis. Sin microservicios, sin otra base de datos. Despliegue nativo (sin Docker) en esta fase de prototipo: entorno local en Laragon, servidor de pruebas en un droplet con OpenLiteSpeed. Ver `docs/adr/ADR-001.md` y `docs/adr/ADR-002.md`.
 - Monolito modular por dominio; toda tabla de negocio nueva lleva `tenant_id` desde el día uno, aunque hoy solo exista un tenant.
 - Terminología obligatoria: **tenant/negocio** ≠ **cliente** (comprador final) ≠ **emprendedor** (quien opera el tenant) — ver `docs/business/diccionario-del-negocio.md`.
 - Objetivo de estos 30 días: un prototipo **confiable y funcional**, no un despliegue en producción. No se integra pasarela de pago real, publicidad ni servicios pagos todavía.

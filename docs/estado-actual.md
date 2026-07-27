@@ -24,9 +24,9 @@
 
 ## Infraestructura ya disponible
 
-- Un servidor (Droplet de DigitalOcean) reservado para pruebas de este prototipo.
+- Un servidor (Droplet de DigitalOcean) reservado para pruebas de este prototipo, que se configura con **OpenLiteSpeed + PHP + MySQL + Redis de forma nativa, sin Docker** — decisión registrada en `docs/adr/ADR-002.md` tras verificar que el entorno local ya usa MySQL (Laragon) y que un desarrollador solo, en 30 días, no gana nada agregando Docker ni PostgreSQL a lo que ya tiene funcionando.
 - Un dominio ya comprado, disponible para usarse cuando el prototipo esté listo para mostrarse.
-- Ninguno de los dos se usa como entorno de producción todavía — son para pruebas del prototipo del sprint de 30 días.
+- Ninguno de los dos se usa como entorno de producción real todavía — el droplet cumple hoy, a la vez, el rol de staging y de "producción" del prototipo del sprint de 30 días (ver `docs/development/devops.md`).
 
 ---
 
@@ -35,7 +35,8 @@
 - [x] Fase 1 completa y commiteada.
 - [x] Roadmap ajustado tras investigación real: Mercado Libre se integra antes que TikTok Shop (TikTok Shop no tenía onboarding de vendedor local abierto en Colombia a la fecha de la investigación — re-validar en `docs/research/tiktok-shop.md` antes de construir esa integración).
 - [x] Alcance del sprint de 30 días acordado: prototipo funcional, no producción.
-- [ ] Semana 1 — Cimientos: Laravel (auth + modelo de datos núcleo con `tenant_id`) + Next.js conectado a la API propia. Entorno local, sin Docker ni despliegue todavía.
+- [x] Decisión de infraestructura tomada: MySQL en vez de PostgreSQL, despliegue nativo (sin Docker) en vez de contenedores, para todos los entornos de este prototipo — ver `docs/adr/ADR-002.md`.
+- [ ] Semana 1 — Cimientos: Laravel (auth + modelo de datos núcleo con `tenant_id`) + Next.js conectado a la API propia. Entorno local (Laragon, MySQL nativo), sin despliegue todavía.
 - [ ] Semana 2 — Tienda: catálogo público, carrito, checkout con pago simulado (pedido queda "pendiente de confirmación", el admin lo confirma a mano — sin pasarela de pago real).
 - [ ] Semana 3 — Panel: CRUD de productos, gestión de pedidos, descuento de stock al confirmar un pedido.
 - [ ] Semana 4 — Confiabilidad: cargar el catálogo real de skincare, pruebas end-to-end del flujo completo, corregir lo que rompa.

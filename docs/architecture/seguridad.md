@@ -61,7 +61,7 @@ Una plataforma multi-tenant que maneja pedidos, pagos y datos de clientes de var
 - **Configuración de seguridad incorrecta (A05):** configuración por entorno versionada como código (ver `infraestructura.md`), sin valores por defecto inseguros expuestos en producción (modo debug desactivado, cabeceras de seguridad HTTP activas).
 - **Componentes vulnerables desactualizados (A06):** dependencias de Laravel/Next.js con actualizaciones de seguridad monitoreadas y aplicadas de forma regular (mecanismo exacto en `docs/development/ci-cd.md`).
 - **Fallas de identificación y autenticación (A07):** tokens con expiración y revocación, límite de intentos de login (rate limiting específico, ver `apis.md`).
-- **Fallas de integridad de software y datos (A08):** artefactos de despliegue (imágenes Docker) construidos y promovidos por el pipeline oficial (ver `infraestructura.md`), no ensamblados a mano.
+- **Fallas de integridad de software y datos (A08):** el código desplegado (build de `composer install --no-dev` y `npm run build`) proviene siempre de un commit validado por el pipeline oficial (ver `infraestructura.md`), nunca de cambios ensamblados o editados a mano directamente en el servidor.
 - **Fallas de registro y monitoreo (A09):** cubierto por la estrategia de auditoría descrita abajo, más monitoreo de errores e intentos de acceso anómalos.
 - **Server-Side Request Forgery (A10):** relevante por las integraciones externas del sistema (transportadoras, marketplaces, proveedor de IA); toda llamada saliente a un servicio externo pasa por el adaptador de su módulo (`TransportadoraInterface`, `MarketplaceInterface`, `ProveedorIAInterface`, ver `principios-de-arquitectura.md`), nunca por una URL construida dinámicamente a partir de entrada de usuario sin validar.
 
@@ -120,3 +120,4 @@ Una plataforma multi-tenant que maneja pedidos, pagos y datos de clientes de var
 ## Historial
 
 - **2026-07-27** — Primera versión.
+- **2026-07-27** — Actualizado: MySQL en vez de PostgreSQL y despliegue nativo en vez de Docker — ver ADR-002.

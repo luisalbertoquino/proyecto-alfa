@@ -59,7 +59,7 @@ No cubre: diseño físico completo del esquema, estrategia de particionamiento o
 - Agregar una columna nueva: siempre `nullable()` o con `default()`, nunca `NOT NULL` sin default sobre una tabla con filas existentes.
 - Agregar una restricción `NOT NULL` a una columna existente: se hace en dos pasos/migraciones — 1) backfill de los datos existentes, 2) migración separada que agrega la restricción, desplegada después de confirmar que el backfill terminó.
 - Renombrar una columna: nunca con `rename` directo en una tabla ya usada en producción sin ventana de mantenimiento coordinada; se prefiere agregar la columna nueva, migrar datos, y retirar la vieja en una migración posterior, con el código desplegado leyendo ambas durante la transición.
-- Agregar un índice a una tabla grande: se evalúa el uso de creación de índice sin bloqueo (`CREATE INDEX CONCURRENTLY` en PostgreSQL) cuando el volumen de la tabla lo justifique; documentado como decisión futura hasta que exista una tabla lo bastante grande para necesitarlo.
+- Agregar un índice a una tabla grande: se evalúa el uso de creación de índice sin bloqueo (DDL en línea de MySQL 8, `ALGORITHM=INPLACE, LOCK=NONE`, el equivalente a `CREATE INDEX CONCURRENTLY` de PostgreSQL) cuando el volumen de la tabla lo justifique; documentado como decisión futura hasta que exista una tabla lo bastante grande para necesitarlo.
 - Eliminar una columna o tabla: solo después de confirmar que ningún código en ningún entorno desplegado la lee ya (mínimo un ciclo de despliegue completo de gracia).
 
 ### Índices obligatorios
@@ -67,7 +67,7 @@ No cubre: diseño físico completo del esquema, estrategia de particionamiento o
 - `tenant_id` (o `[tenant_id, *]` compuesto) en toda tabla de negocio, como se describe arriba.
 - Toda llave foránea (`_id`) tiene su índice correspondiente — Laravel lo agrega automáticamente con `foreignId()->constrained()`, pero se verifica en migraciones manuales.
 - Toda columna usada como filtro frecuente en un endpoint paginado (ej. `estado` en `pedidos`, `canal_id` en tablas de sincronización) se indexa, idealmente compuesta con `tenant_id`.
-- Toda columna usada para búsqueda de texto (ej. nombre de producto) evalúa índice `GIN`/`trigram` en vez de escaneo completo, una vez el volumen lo justifique.
+- Toda columna usada para búsqueda de texto (ej. nombre de producto) evalúa índice `FULLTEXT` de MySQL (equivalente al índice `GIN`/`trigram` de PostgreSQL para este caso) en vez de escaneo completo, una vez el volumen lo justifique.
 
 ### Nombres de tabla y columna
 
@@ -129,3 +129,4 @@ Schema::table('envios', function (Blueprint $table) {
 ## Historial
 
 - **2026-07-27** — Primera versión.
+- **2026-07-27** — Actualizado: MySQL en vez de PostgreSQL y despliegue nativo en vez de Docker — ver ADR-002.

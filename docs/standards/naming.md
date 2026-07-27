@@ -14,7 +14,7 @@ Que un nombre — de clase, tabla, ruta o rama — permita predecir a qué perte
 
 ## Alcance
 
-Cubre convenciones de nombres para: namespaces de módulo, clases PHP (y sus sufijos técnicos), tablas y columnas de PostgreSQL, rutas de la API, componentes y hooks de React/Next.js, ramas de git, y variables de entorno.
+Cubre convenciones de nombres para: namespaces de módulo, clases PHP (y sus sufijos técnicos), tablas y columnas de MySQL, rutas de la API, componentes y hooks de React/Next.js, ramas de git, y variables de entorno.
 
 No cubre: el formato del mensaje de commit (`docs/standards/commits.md`), el contrato completo de la API (`docs/standards/api.md`), ni el detalle de migraciones (`docs/standards/database.md`) — este documento solo fija cómo se llaman las cosas, no cómo se construyen.
 
@@ -50,7 +50,7 @@ No cubre: el formato del mensaje de commit (`docs/standards/commits.md`), el con
 - Métodos que representan una regla o acción de negocio: verbo en español, `camelCase`: `verificarDisponibilidad()`, `cotizar()`, `generarGuia()`, `rastrear()`.
 - Métodos que existen por convención del framework (acciones CRUD de un controlador de recurso, `handle()` de un job/listener, hooks del ciclo de vida de Eloquent): se dejan en inglés tal como Laravel los define (`index`, `store`, `update`, `destroy`, `handle`, `boot`).
 
-### Tablas y columnas (PostgreSQL)
+### Tablas y columnas (MySQL)
 
 - Nombre de tabla: plural, `snake_case`, español, derivado del nombre del modelo — `pedidos`, `productos`, `envios`, `proveedores`. Esto es lo que Eloquent infiere automáticamente del nombre del modelo, así que no requiere declarar `$table` a mano.
 - Columnas de contenido de negocio: `snake_case`, español — `estado`, `fecha_entrega`, `direccion_destino`.
@@ -125,3 +125,4 @@ No cubre: el formato del mensaje de commit (`docs/standards/commits.md`), el con
 ## Historial
 
 - **2026-07-27** — Primera versión.
+- **2026-07-27** — Actualizado: MySQL en vez de PostgreSQL y despliegue nativo en vez de Docker — ver ADR-002.

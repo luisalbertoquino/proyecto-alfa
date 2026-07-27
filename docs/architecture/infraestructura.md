@@ -2,109 +2,114 @@
 
 ## Propósito
 
-Explicar cómo se empaqueta y despliega Proyecto Alfa: uso de Docker en todos los entornos, qué entornos existen (local, staging, producción), cómo ocurre un despliegue a alto nivel, qué rol cumple Cloudflare, y qué rol cumple GitHub Actions. El detalle paso a paso del pipeline de CI/CD vive en `docs/development/ci-cd.md`; este documento explica el **porqué** de la topología de infraestructura, no cada comando del pipeline.
+Explicar cómo se despliega Proyecto Alfa en su fase de prototipo (Fase 2): entorno local con Laragon, servidor de pruebas nativo sobre un Droplet de DigitalOcean con OpenLiteSpeed + MySQL + Redis (sin contenedores), cómo ocurre un despliegue a alto nivel, qué rol cumple Cloudflare, y qué rol cumple GitHub Actions. El detalle paso a paso del pipeline de CI/CD vive en `docs/development/ci-cd.md`; este documento explica el **porqué** de la topología de infraestructura actual, no cada comando del pipeline. La decisión de usar despliegue nativo en vez de Docker para esta fase está documentada en `docs/adr/ADR-002.md`.
 
 ---
 
 ## Objetivo
 
-Que cualquier entorno — la máquina de un desarrollador, staging o producción — corra exactamente la misma composición de servicios, para que "funciona en mi máquina" deje de ser un riesgo, y que llevar un cambio de código a producción sea un proceso reproducible y auditable, no manual.
+Que el entorno local de desarrollo y el servidor de pruebas compartan la misma base tecnológica (PHP, MySQL, Redis) para que "funciona en mi máquina" sea representativo de "funciona en el droplet", y que llevar un cambio de código al servidor de pruebas sea un procedimiento simple y repetible que un desarrollador solo pueda operar con confianza durante un sprint de 30 días, sin la sobrecarga operativa de una capa de contenedores que hoy no aporta valor medible.
 
 ---
 
 ## Alcance
 
-Cubre: uso de Docker como unidad de empaquetado en todos los entornos, definición de entornos (local/staging/producción) y sus diferencias, flujo de despliegue a alto nivel, rol de Cloudflare, y rol de GitHub Actions como orquestador de CI/CD a alto nivel.
+Cubre: entorno local (Laragon), servidor de pruebas (droplet con despliegue nativo), definición de esos dos entornos y sus diferencias, flujo de despliegue a alto nivel, rol de Cloudflare, y rol de GitHub Actions como orquestador de CI/CD a alto nivel.
 
-No cubre: el detalle exacto del pipeline (jobs, steps, secretos de GitHub Actions) — eso vive en `docs/development/ci-cd.md`; ni las palancas de escalado en sí (`escalabilidad.md`); ni la postura de seguridad de secretos e infraestructura (`seguridad.md`).
+No cubre: el detalle exacto del pipeline (jobs, steps, secretos de GitHub Actions) — eso vive en `docs/development/ci-cd.md`; ni las palancas de escalado en sí (`escalabilidad.md`); ni la postura de seguridad de secretos e infraestructura (`seguridad.md`); ni la justificación completa de MySQL sobre PostgreSQL o de despliegue nativo sobre Docker — eso vive en `docs/adr/ADR-002.md`.
 
 ---
 
 ## Problema que resuelve
 
-Sin una definición explícita de infraestructura, cada entorno termina configurado a mano, de forma distinta, y las diferencias entre "cómo corre en mi máquina" y "cómo corre en producción" se convierten en la fuente más común de bugs que "no deberían pasar". Igualmente, un despliegue manual sin pipeline reproducible es lento, propenso a error humano y no deja rastro auditable de qué cambió y cuándo. Este documento fija Docker y GitHub Actions como las piezas que eliminan ambos problemas desde el diseño.
+Sin una definición explícita de infraestructura, cada entorno termina configurado a mano, de forma distinta, y las diferencias entre "cómo corre en mi máquina" y "cómo corre en el servidor de pruebas" se convierten en la fuente más común de bugs que "no deberían pasar". Igualmente, un despliegue manual sin ningún procedimiento repetible es lento y propenso a error humano. Este documento fija Laragon en local, el droplet nativo como servidor de pruebas, y GitHub Actions como las piezas que reducen ambos problemas, con la complejidad justa para un prototipo operado por una sola persona — no la topología completa de múltiples entornos contenerizados que un equipo más grande necesitaría.
 
 ---
 
 ## Principios
 
-1. **Un solo empaquetado, todos los entornos.** La misma imagen Docker (o su equivalente por entorno con variables de configuración distintas) corre en local, staging y producción — las diferencias entre entornos son de configuración, no de construcción.
-2. **La infraestructura es código versionado.** Definiciones de Docker, orquestación y pipeline viven en el repositorio (`infrastructure/`, `docker/`), no como pasos manuales documentados en la cabeza de alguien.
-3. **Staging existe para parecerse a producción, no para ser un ambiente aparte con reglas propias.** Un cambio que pasa staging debe comportarse igual en producción.
-4. **Cloudflare es la primera línea, no un añadido.** CDN y WAF se consideran parte de la topología base, no una optimización posterior.
-5. **Todo despliegue pasa por el pipeline.** Nadie despliega a producción con comandos manuales ejecutados a mano fuera de GitHub Actions, salvo un procedimiento de emergencia explícitamente documentado y auditado.
+1. **La misma base tecnológica en todos los entornos, aunque el empaquetado no sea idéntico.** Local y droplet corren PHP, MySQL y Redis de la misma versión mayor; las diferencias son de configuración (credenciales, dominio, recursos), no de motor.
+2. **La infraestructura es lo más simple que el problema actual permite.** Para un prototipo de 30 días, sin equipo y sin tráfico de producción, un solo servidor nativo es suficiente — se añade complejidad (más servidores, contenedores) cuando haya una razón medible, no por adelantado (ver `docs/adr/ADR-002.md`).
+3. **El droplet de pruebas cumple hoy el rol de staging y de "producción" del prototipo a la vez** (ver `docs/estado-actual.md`) — no existe todavía una separación de ambientes propia de un sistema en producción real con usuarios pagando.
+4. **Cloudflare es la primera línea, no un añadido.** CDN, DNS y protección básica se consideran parte de la topología base frente al droplet, independientemente de si el backend corre en contenedores o de forma nativa.
+5. **El despliegue es un procedimiento conocido y repetible**, aunque hoy sea manual o semi-manual — no comandos improvisados distintos cada vez.
+6. **Contenerizar es una opción reservada, no descartada.** Se reevalúa en fases posteriores del roadmap (Fase 5 — SaaS) si el negocio llega a necesitar múltiples servidores o un equipo más grande que deba reproducir el mismo entorno.
 
 ---
 
 ## Reglas
 
-### Docker en todos los entornos
+### Entorno local — Laragon
 
-- Cada aplicación desplegable (`apps/api`, `apps/web`, `apps/admin`) tiene su propia imagen Docker, definida en el repositorio, con un `Dockerfile` orientado a producción (build multi-stage: dependencias de build separadas de la imagen final que corre).
-- El entorno local se levanta con Docker Compose, replicando los mismos servicios (Laravel, Next.js, PostgreSQL, Redis) que corren en staging y producción, para que el comportamiento observado localmente sea representativo.
-- Las diferencias entre entornos se manejan por variables de entorno y configuración (ver `seguridad.md` para manejo de secretos), nunca por una rama de código o un Dockerfile distinto por entorno.
+- El entorno de desarrollo local corre sobre **Laragon (Windows)**, con **PHP 8.1.10, Composer, Node 22, MySQL 8.0.30 y Redis** instalados de forma nativa — no hay Docker ni Docker Compose en el flujo de trabajo local de esta fase.
+- Datos de prueba locales, servicios externos (transportadoras, marketplaces, proveedor de IA) en modo simulado/mock cuando sea posible, para no depender de credenciales reales ni afectar cuentas productivas.
+- Un desarrollador nuevo (o el mismo desarrollador en una máquina nueva) reproduce el entorno instalando Laragon y las versiones fijadas arriba, siguiendo la guía de arranque del propio repositorio, en vez de levantar un stack de contenedores.
 
-### Entornos
+### Servidor de pruebas — Droplet nativo
 
-- **Local:** máquina de cada desarrollador, vía Docker Compose. Datos de prueba, servicios externos (transportadoras, marketplaces, proveedor de IA) en modo simulado/mock cuando sea posible para no depender de credenciales reales ni afectar cuentas productivas.
-- **Staging:** entorno que replica producción en topología (mismos servicios, misma versión de PostgreSQL/Redis), con datos representativos pero no reales de clientes. Es donde se valida un cambio antes de producción, incluyendo migraciones de base de datos.
-- **Producción:** entorno que sirve al negocio piloto (y, a futuro, a los tenants del modelo SaaS). Cambios llegan únicamente a través del pipeline de CI/CD, nunca de forma manual salvo procedimiento de emergencia documentado.
+- El servidor de pruebas es **un Droplet de DigitalOcean** configurado con **OpenLiteSpeed** como servidor web, y **PHP, MySQL y Redis instalados de forma nativa** sobre el sistema operativo del droplet — sin contenedores.
+- Este droplet cumple hoy, a la vez, el rol de entorno de pruebas del prototipo y el único servidor accesible fuera de la máquina local (ver `docs/estado-actual.md`, sección "Infraestructura ya disponible") — no es un ambiente de producción con usuarios reales ni datos de clientes reales todavía.
+- Las diferencias entre local y el droplet se manejan por variables de entorno y configuración (ver `seguridad.md` para manejo de secretos), nunca por una rama de código distinta.
 
 ### Flujo de despliegue (alto nivel)
 
-- Un cambio se integra a la rama principal solo tras pasar el pipeline de CI (tests, linting, build de imágenes) — el detalle exacto de jobs vive en `docs/development/ci-cd.md`.
-- El despliegue a staging es automático ante cada integración a la rama principal; el despliegue a producción requiere una promoción explícita (ej. tag de versión o aprobación) del mismo artefacto ya validado en staging — no se reconstruye la imagen para producción, se promueve la misma que pasó staging.
-- Las migraciones de base de datos siguen las reglas de `base-de-datos.md` (sin downtime) y se ejecutan como parte controlada del despliegue, nunca a mano contra producción.
-- Todo despliegue a producción queda registrado (qué versión, cuándo, quién lo promovió) para trazabilidad.
+- Un cambio se integra a la rama principal tras pasar el pipeline de CI (tests, linting, build) — el detalle exacto de jobs vive en `docs/development/ci-cd.md`.
+- El despliegue al droplet consiste en, sobre el propio servidor: `git pull` de la rama principal, `composer install --no-dev` (backend), `npm run build` (frontend) y `php artisan migrate` para aplicar migraciones pendientes, siguiendo las reglas sin downtime de `base-de-datos.md`.
+- Hoy este despliegue se ejecuta manualmente o mediante un script simple invocado a mano; GitHub Actions puede, más adelante, ejecutar ese mismo script por SSH contra el droplet al hacer merge a `main` (ver `docs/development/ci-cd.md`), sin que eso requiera introducir Docker.
+- Todo despliegue al droplet queda registrado como mínimo por el propio historial de git (qué commit está desplegado) para trazabilidad básica, proporcional al tamaño del proyecto en esta fase.
 
 ### Rol de Cloudflare
 
-- Cloudflare se sitúa delante de `apps/web` (y del resto de tráfico público) cumpliendo: CDN para contenido estático y páginas SSG/ISR, terminación TLS, WAF y mitigación de tráfico anómalo/DDoS, antes de que ese tráfico llegue a los contenedores de aplicación.
-- La configuración de Cloudflare (reglas de cache, reglas de WAF, DNS) se documenta y versiona en la medida en que la herramienta lo permita (Terraform u otro IaC), evitando configuración manual no rastreada cuando el proyecto lo justifique.
+- Cloudflare se sitúa delante del droplet cumpliendo: DNS, CDN para contenido estático y páginas SSG/ISR, terminación TLS, y protección básica de tráfico anómalo — este rol no depende de si el backend corre en contenedores o nativo.
+- La configuración de Cloudflare (reglas de cache, DNS) se documenta a medida que se define, evitando configuración manual no rastreada cuando el proyecto lo justifique.
 
 ### Rol de GitHub Actions
 
-- GitHub Actions orquesta, a alto nivel: validación de cada cambio (tests, linting), construcción de imágenes Docker, y despliegue automatizado a staging/producción según el flujo descrito arriba.
-- El pipeline es el único camino oficial hacia producción — cualquier excepción manual es un procedimiento de emergencia explícito, documentado y revisado después del hecho.
+- GitHub Actions orquesta, a alto nivel: validación de cada cambio (tests, linting, build) en cada Pull Request y en `main`; el despliegue automatizado al droplet por SSH es una extensión planeada, no obligatoria desde el día uno de esta fase.
 - Detalle exacto de jobs, matrices de test, y configuración del pipeline: `docs/development/ci-cd.md`.
 
 ---
 
 ## Ejemplos
 
-- Un desarrollador levanta `docker compose up` localmente y obtiene Laravel, Next.js (web y admin), PostgreSQL y Redis corriendo con la misma topología que producción, con datos de prueba y transportadoras/marketplaces simulados.
-- Un cambio en el módulo `Envios` se integra a la rama principal, el pipeline construye las imágenes, corre los tests del módulo y de integración, despliega automáticamente a staging; tras validación manual, se promueve la misma imagen a producción.
-- Una campaña publicitaria genera un pico de tráfico a la ficha de producto: Cloudflare sirve la mayoría de esas requests desde cache CDN sin que lleguen a los contenedores de `apps/web`.
+- Un desarrollador clona el repositorio, instala Laragon con PHP 8.1.10, MySQL 8.0.30, Redis y Node 22, corre `composer install`, `npm install` y `php artisan migrate`, y tiene el sistema corriendo localmente sin necesidad de ninguna herramienta de contenedores.
+- Un cambio en el módulo `Envios` se integra a la rama principal; el pipeline de CI corre lint/tests/build; el desarrollador se conecta por SSH al droplet (o dispara el script de despliegue) y ejecuta `git pull`, `composer install --no-dev`, `npm run build` y `php artisan migrate` para llevar el cambio al servidor de pruebas.
+- Una visita a la tienda pública llega primero a Cloudflare, que sirve contenido cacheado cuando aplica, antes de que la request llegue al droplet.
 
 ---
 
 ## Casos límite
 
-- **Incidente en producción que exige un cambio inmediato fuera del pipeline normal** (hotfix): se define un procedimiento de emergencia explícito (quién puede autorizarlo, cómo se audita después) en vez de dejarlo como excepción tácita sin registro.
-- **Staging diverge de producción con el tiempo** (ej. una variable de configuración que solo existe en producción): se considera una falla del proceso a corregir, no un estado aceptable — staging pierde su propósito si deja de predecir el comportamiento en producción.
-- **Caída de Cloudflare o de un servicio externo de infraestructura:** el sistema debe degradar (ver `vision-tecnica.md`, casos límite) en vez de quedar completamente inaccesible; esto se planifica junto con `escalabilidad.md`.
+- **El droplet necesita un rollback tras un despliegue que rompe algo:** se vuelve a un commit anterior conocido-bueno y se repite el procedimiento de despliegue (`git pull` de ese commit, `composer install`, `migrate` si aplica) — ver `docs/development/devops.md` para el detalle de rollback, incluyendo el caso en que el problema es de datos y exige restaurar un backup de MySQL en vez de solo revertir código.
+- **El tráfico del prototipo empieza a superar lo que un solo droplet puede sostener:** es la señal concreta para evaluar escalar a más de un servidor, y en ese punto reevaluar si contenerizar (Docker u otra herramienta) aporta valor — no antes, y no de forma preventiva (ver `docs/adr/ADR-002.md`, "Queda pendiente").
+- **Caída de Cloudflare o del droplet:** el sistema debe degradar o, como mínimo, dejar claro el estado del servicio (ver `vision-tecnica.md`, casos límite); dado que hoy es un único servidor, no hay redundancia de infraestructura en esta fase — riesgo aceptado explícitamente para un prototipo, no para producción.
 
 ---
 
 ## Decisiones futuras
 
-- Orquestador de contenedores en producción (Docker Compose simple vs. Kubernetes vs. un servicio gestionado tipo ECS) — hoy no comprometido; se decidirá como ADR cuando el volumen de tráfico y equipo lo justifique.
-- Herramienta de Infraestructura como Código (Terraform u otra) para versionar la configuración de Cloudflare y del entorno de producción de forma completa.
-- Estrategia de despliegue progresivo (blue-green, canary) una vez el tráfico real lo amerite; hoy el despliegue es directo tras staging.
-- Procedimiento formal y documentado de rollback ante un despliegue fallido en producción.
+- Si y cuándo contenerizar el despliegue (Docker u otra herramienta), evaluado en una fase posterior del roadmap (Fase 5 — SaaS) si el negocio llega a necesitar múltiples servidores o un equipo más grande — no comprometido hoy (ver `docs/adr/ADR-002.md`).
+- Automatizar el despliegue nativo actual vía GitHub Actions ejecutando el script de despliegue por SSH contra el droplet, en vez de ejecutarlo a mano.
+- Separar formalmente un entorno de staging del de "producción del prototipo" una vez el negocio piloto tenga tráfico real de clientes finales — hoy el droplet cumple ambos roles a la vez (ver `docs/estado-actual.md`).
+- Herramienta de Infraestructura como Código (Terraform u otra) para versionar la configuración de Cloudflare y del droplet, si el crecimiento del proyecto lo justifica.
+- Procedimiento formal y documentado de rollback más allá de lo descrito en `docs/development/devops.md`.
 
 ---
 
 ## Referencias
 
-- `docs/architecture/vision-tecnica.md` — decisión de stack (Docker, Cloudflare, GitHub Actions) que esta infraestructura implementa.
-- `docs/architecture/escalabilidad.md` — cómo escalan los contenedores definidos aquí.
+- `docs/adr/ADR-002.md` — decisión de MySQL y despliegue nativo en vez de PostgreSQL y Docker para esta fase.
+- `docs/architecture/vision-tecnica.md` — principios de stack que esta infraestructura implementa.
+- `docs/architecture/escalabilidad.md` — cómo escalaría el sistema si se necesitara más de un servidor.
 - `docs/architecture/base-de-datos.md` — reglas de migraciones aplicadas durante el despliegue.
 - `docs/development/ci-cd.md` — detalle paso a paso del pipeline de GitHub Actions.
+- `docs/development/devops.md` — entornos, rollback y operación una vez desplegado.
 - `docs/architecture/seguridad.md` — manejo de secretos en cada entorno.
+- `docs/estado-actual.md` — infraestructura real ya disponible para el sprint de 30 días.
 
 ---
 
 ## Historial
 
 - **2026-07-27** — Primera versión.
+- **2026-07-27** — Actualizado: MySQL en vez de PostgreSQL y despliegue nativo en vez de Docker — ver ADR-002.
