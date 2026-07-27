@@ -44,12 +44,14 @@ Desarrollar una plataforma integral para emprendedores y comercios electrónicos
 
 ## Arquitectura General
 
-El repositorio está migrando hacia un enfoque de **monorepo**, donde varias aplicaciones relacionadas conviven y comparten estándares:
+El repositorio sigue un enfoque de **monorepo**, donde varias aplicaciones relacionadas conviven y comparten estándares:
 
 ```
 proyecto-alfa/
-├── apps/            # web (tienda), admin (panel), api  — en migración desde backend/ + frontend/
-├── packages/        # código compartido entre apps
+├── apps/
+│   ├── api/         # Laravel — API JSON, monolito modular por dominio
+│   └── web/         # Next.js — tienda pública (admin/ se agrega en la Semana 3)
+├── packages/        # código compartido entre apps (aún no creado)
 ├── docs/            # documentación de arquitectura, negocio, diseño, desarrollo, research, ADRs, RFCs
 ├── infrastructure/  # scripts de despliegue, configuración del servidor (OpenLiteSpeed, nativo por ahora)
 ├── database/        # esquemas, migraciones, seeders
@@ -91,7 +93,7 @@ Detalle y fechas en [`docs/business/roadmap.md`](docs/business/roadmap.md) (en c
 
 | Carpeta | Contenido |
 |---|---|
-| `backend/`, `frontend/` | Código actual de la aplicación (en migración a `apps/`) |
+| `apps/api`, `apps/web` | Código de la aplicación: API Laravel y tienda Next.js |
 | `docs/` | Documentación: arquitectura, negocio, diseño, desarrollo, research, actas, ADRs, RFCs, estándares |
 | `database/` | Esquemas y migraciones |
 | `infrastructure/` | Scripts de despliegue y configuración del servidor (OpenLiteSpeed, nativo por ahora) |
