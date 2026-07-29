@@ -20,3 +20,7 @@ Para profundizar en un tema puntual, la documentación completa vive en `docs/` 
 ## Al terminar un bloque de trabajo significativo
 
 Actualiza `docs/estado-actual.md` (sección "Próximo paso concreto" y "Hecho hasta ahora") sin que haga falta que el usuario lo pida — es lo que mantiene la continuidad entre sesiones.
+
+## Git: commit y push automáticos
+
+El usuario autorizó explícitamente (2026-07-27) hacer `commit` y `push` a `origin/main` sin pedir permiso cada vez, al cerrar cada bloque de trabajo significativo (no en cada archivo suelto). Sigue aplicando el resto del protocolo de seguridad de git (nunca `--force`, nunca `--no-verify`, nunca reescribir historia, commits nuevos en vez de `--amend`).

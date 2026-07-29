@@ -40,22 +40,29 @@
 - [x] `apps/api` creado (Laravel 13, PHP 8.3.32), conectado a MySQL (`proyecto_alfa`, migrado) y Redis (vía `predis`, porque la extensión nativa de Redis no está disponible en Windows). Corre con `php artisan serve` en `http://127.0.0.1:8000` — sin Apache.
 - [x] `apps/web` creado (Next.js 16, TypeScript, Tailwind, App Router). Corre con `npm run dev` en `http://localhost:3000`.
 - [x] `backend/` y `frontend/` (legacy, vacíos) eliminados — la migración a `apps/` que estaba pendiente en el README ya se hizo directamente, sin paso intermedio.
-- [ ] Semana 1 — Cimientos (en curso): falta el modelo de datos núcleo con `tenant_id` (tenant, producto, categoría, pedido, cliente) y autenticación; y que `apps/web` consuma la API en vez de la página default de Next.js.
-- [ ] Semana 2 — Tienda: catálogo público, carrito, checkout con pago simulado (pedido queda "pendiente de confirmación", el admin lo confirma a mano — sin pasarela de pago real).
+- [x] **Semana 1 — Cimientos: completa.** Modelo de datos núcleo con `tenant_id` (`tenants`, `categorias`, `productos`, `clientes`, `pedidos`, `detalle_pedidos`, más `tenant_id` en `users`), estructura modular real (`app/Modules/Catalogo`, `app/Modules/Pedidos`, `app/Shared`) siguiendo `docs/architecture/arquitectura-backend.md`. Scoping automático por tenant (`TenantScope` + trait `BelongsToTenant`) **probado end-to-end**: un segundo tenant de prueba solo veía su propio producto, nunca los del piloto — ver detalle en Referencias. Autenticación con Sanctum (`POST /api/v1/login`, `/me`, `/logout`) funcionando. Sembrado el piloto real: tenant "Skincare Piloto", usuario `admin@skincarepiloto.test` / `password`, 3 categorías y 5 productos de skincare de ejemplo.
+- [ ] Semana 2 — Tienda: catálogo público, carrito, checkout con pago simulado (pedido queda "pendiente de confirmación", el admin lo confirma a mano — sin pasarela de pago real). Falta también que `apps/web` consuma la API real en vez de la página default de Next.js.
 - [ ] Semana 3 — Panel: CRUD de productos, gestión de pedidos, descuento de stock al confirmar un pedido.
-- [ ] Semana 4 — Confiabilidad: cargar el catálogo real de skincare, pruebas end-to-end del flujo completo, corregir lo que rompa.
+- [ ] Semana 4 — Confiabilidad: cargar el catálogo real de skincare (falta definir con el negocio), pruebas end-to-end del flujo completo, corregir lo que rompa.
 
 ## Próximo paso concreto
 
-`apps/api` (Laravel) y `apps/web` (Next.js) ya corren localmente y conectan a MySQL/Redis. Sigue: diseñar y migrar el modelo de datos núcleo con `tenant_id` (tenant, producto, categoría, pedido, cliente) siguiendo `docs/architecture/base-de-datos.md` y `docs/standards/database.md`, y montar autenticación básica.
+Empezar la Semana 2: `apps/web` debe dejar de mostrar la página default de Next.js y consumir `apps/api` de verdad — catálogo público (lista + detalle de producto) primero, luego carrito y checkout con pago simulado.
 
 ### Cómo levantar el entorno en una sesión nueva
 
 1. Laragon: solo necesitas que **MySQL** esté iniciado (no Apache).
-2. Redis: `C:\laragon\bin\redis\redis-x64-5.0.14.1\redis-server.exe` (no lo inicia Laragon solo; hay que arrancarlo aparte).
+2. Redis: iniciarlo aparte como proceso independiente — `Start-Process -FilePath "C:\laragon\bin\redis\redis-x64-5.0.14.1\redis-server.exe" -WindowStyle Hidden` en PowerShell (no lo inicia Laragon solo, y si se lanza con `nohup` desde bash puede morir entre turnos de la sesión — `Start-Process` de PowerShell es lo que sobrevive).
 3. API: `cd apps/api && php artisan serve --port=8000`
 4. Web: `cd apps/web && npm run dev -- --port 3000`
 5. La versión activa de PHP debe ser la 8.3.32 (`C:\laragon\bin\php\php-8.3.32-Win32-vs16-x64`), no la 8.1.10 vieja.
+6. Login de prueba: `POST /api/v1/login` con `{"email":"admin@skincarepiloto.test","password":"password"}`.
+
+### Notas técnicas para la próxima sesión
+
+- Laravel 13 usa atributos PHP (`#[Fillable([...])]`, `#[Hidden([...])]`) en vez de las propiedades `$fillable`/`$hidden` — revisar `app/Models/User.php` como referencia antes de escribir un modelo nuevo, no asumir la sintaxis clásica.
+- `tenant_id` es **intencionalmente no-fillable** en los modelos de negocio (Producto, Categoria, etc.): se asigna solo automáticamente vía `BelongsToTenant` cuando hay un `currentTenantId` resuelto (middleware `resolve-tenant`), nunca desde el cuerpo de una petición. `firstOrCreate`/`updateOrCreate` sí lo aceptan porque usan `forceFill` internamente — es la excepción esperada, no un bug.
+- `apps/web` trae su propio `apps/web/CLAUDE.md` (apunta a `apps/web/AGENTS.md`): advierte que Next.js 16 tiene cambios que rompen con versiones anteriores — revisar `node_modules/next/dist/docs/` antes de escribir código de Next.js nuevo, no asumir patrones de versiones anteriores.
 
 ## Decisiones pendientes que no son técnicas
 

@@ -34,6 +34,10 @@ next-env.d.ts
 # --- Docker ---
 docker-compose.override.yml
 
+# --- Redis ---
+*.rdb
+dump.rdb
+
 # Build / test genéricos
 dist/
 build/
