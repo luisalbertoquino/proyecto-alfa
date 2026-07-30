@@ -48,6 +48,7 @@
   - [x] Mensajes de validación en español (`laravel-lang/lang`, `lang:add es`) — antes salían en inglés pese a `APP_LOCALE=es`, porque Laravel no trae español integrado.
   - [x] Nombre del tenant de prueba limpiado: era literalmente `"Skincare Piloto (nombre por definir)"` y se mostraba tal cual en el panel y la tienda — ahora `"Skincare Piloto"`, presentable mientras se define el nombre real.
   - [x] `apps/web/.env.example` y `apps/admin/.env.example` agregados (no existían — sin esto, nadie sabría qué variable de entorno hace falta al clonar el repo).
+  - [x] **Catálogo de ejemplo ampliado con imagen**: se agregó `imagen_url` al modelo de `Producto` (nullable) y se muestra en la tienda (grilla, detalle) y en el panel (miniatura en la lista, campo con vista previa en el formulario). El catálogo de prueba pasó de 5 a **14 productos en 6 categorías** (limpieza, tónicos y esencias, sueros y tratamientos, hidratación, protección solar, mascarillas y labios), con nombres de productos de skincare coreano realmente virales (investigado por web: [Furylist — 18 Viral Beauty Products of 2026](https://furylist.com/18-viral-beauty-products-of-2026-that-tiktok-cant-stop-talking-about/)) y fotografía de stock libre de derechos (Unsplash) elegida por categoría — a propósito **no** son fotos reales de esas marcas, usar la foto real de un producto ajeno sí sería un problema de derechos de autor aunque sea solo un prototipo local. Incluye un producto con stock 0 a propósito para poder ver el estado "Agotado" en la tienda.
 
 ## Próximo paso concreto
 

@@ -10,6 +10,7 @@ export type Producto = {
   slug: string;
   descripcion: string | null;
   sku: string | null;
+  imagen_url: string | null;
   precio: string;
   stock: number;
   activo: boolean;

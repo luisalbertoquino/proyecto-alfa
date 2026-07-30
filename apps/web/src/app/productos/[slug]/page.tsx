@@ -23,8 +23,18 @@ export default async function ProductoPage({
 
   return (
     <article className="max-w-xl">
+      {producto.imagen_url && (
+        <div className="aspect-square w-full overflow-hidden rounded-lg bg-neutral-100">
+          {/* eslint-disable-next-line @next/next/no-img-element -- imagen externa (Unsplash), sin necesidad del optimizador de Next para un prototipo */}
+          <img
+            src={producto.imagen_url}
+            alt={producto.nombre}
+            className="h-full w-full object-cover"
+          />
+        </div>
+      )}
       {producto.categoria && (
-        <p className="text-xs uppercase tracking-wide text-neutral-500">
+        <p className="mt-4 text-xs uppercase tracking-wide text-neutral-500">
           {producto.categoria.nombre}
         </p>
       )}

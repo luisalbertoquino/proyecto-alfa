@@ -10,6 +10,7 @@ export type DatosProductoForm = {
   stock: number;
   descripcion: string;
   sku: string;
+  imagen_url: string;
   activo: boolean;
 };
 
@@ -34,6 +35,7 @@ export function ProductoForm({
   const [stock, setStock] = useState(producto?.stock ?? 0);
   const [descripcion, setDescripcion] = useState(producto?.descripcion ?? "");
   const [sku, setSku] = useState(producto?.sku ?? "");
+  const [imagenUrl, setImagenUrl] = useState(producto?.imagen_url ?? "");
   const [activo, setActivo] = useState(producto?.activo ?? true);
 
   return (
@@ -47,6 +49,7 @@ export function ProductoForm({
           stock,
           descripcion,
           sku,
+          imagen_url: imagenUrl,
           activo,
         });
       }}
@@ -112,6 +115,28 @@ export function ProductoForm({
           onChange={(e) => setSku(e.target.value)}
           className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium">
+          URL de la imagen (opcional)
+        </label>
+        <input
+          type="url"
+          value={imagenUrl}
+          onChange={(e) => setImagenUrl(e.target.value)}
+          placeholder="https://..."
+          className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+        />
+        {imagenUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- vista previa de una URL externa arbitraria
+          <img
+            src={imagenUrl}
+            alt="Vista previa"
+            className="mt-2 h-24 w-24 rounded object-cover"
+            onError={(e) => (e.currentTarget.style.display = "none")}
+          />
+        )}
       </div>
 
       <div>

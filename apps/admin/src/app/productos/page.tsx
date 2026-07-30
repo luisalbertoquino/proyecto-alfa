@@ -69,6 +69,7 @@ function ListaProductos() {
         <table className="mt-6 w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
+              <th className="py-2"></th>
               <th className="py-2">Nombre</th>
               <th className="py-2">Categoría</th>
               <th className="py-2">Precio</th>
@@ -80,6 +81,18 @@ function ListaProductos() {
           <tbody>
             {productos.map((p) => (
               <tr key={p.id} className="border-b border-neutral-100">
+                <td className="py-2">
+                  {p.imagen_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- imagen externa (Unsplash), sin necesidad del optimizador de Next para un prototipo
+                    <img
+                      src={p.imagen_url}
+                      alt={p.nombre}
+                      className="h-10 w-10 rounded object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded bg-neutral-100" />
+                  )}
+                </td>
                 <td className="py-2 font-medium">{p.nombre}</td>
                 <td className="py-2 text-neutral-600">
                   {p.categoria?.nombre ?? "—"}

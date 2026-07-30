@@ -9,6 +9,7 @@ export type Producto = {
   nombre: string;
   slug: string;
   descripcion: string | null;
+  imagen_url: string | null;
   precio: string;
   stock: number;
   activo: boolean;

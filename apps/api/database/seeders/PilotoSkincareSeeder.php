@@ -12,8 +12,14 @@ use Illuminate\Support\Facades\Hash;
 /**
  * Siembra el negocio piloto real de Proyecto Alfa: la tienda de skincare
  * (ver docs/estado-actual.md). Nombre de tienda y catálogo real siguen
- * pendientes de definir con el negocio; estos son datos de ejemplo para
- * poder probar el flujo completo mientras tanto.
+ * pendientes de definir con el negocio.
+ *
+ * Mientras tanto, este catálogo de ejemplo usa nombres de productos de
+ * skincare coreano realmente virales (investigado, no inventado — ver
+ * docs/estado-actual.md para las fuentes) y fotografía de stock libre de
+ * derechos (Unsplash) elegida por categoría, NO fotos reales de esas
+ * marcas — usar la foto real de un producto de otra marca sí sería un
+ * problema de derechos de autor, aunque sea solo para un prototipo local.
  */
 class PilotoSkincareSeeder extends Seeder
 {
@@ -22,8 +28,7 @@ class PilotoSkincareSeeder extends Seeder
         // El nombre real del negocio todavía no está definido con Angie — se
         // usa "Skincare Piloto" como marcador presentable (nada de anotaciones
         // tipo "(por definir)" aquí: este valor se muestra tal cual en la UI
-        // del panel y de la tienda, ver docs/estado-actual.md para el estado
-        // real de esta decisión pendiente).
+        // del panel y de la tienda).
         $tenant = Tenant::firstOrCreate(
             ['slug' => 'skincare-piloto'],
             ['nombre' => 'Skincare Piloto'],
@@ -38,40 +43,147 @@ class PilotoSkincareSeeder extends Seeder
             ],
         );
 
-        $limpieza = Categoria::firstOrCreate(
-            ['tenant_id' => $tenant->id, 'slug' => 'limpieza-facial'],
-            ['nombre' => 'Limpieza facial'],
-        );
+        $categorias = [
+            'limpieza-facial' => 'Limpieza facial',
+            'tonicos-y-esencias' => 'Tónicos y esencias',
+            'sueros-y-tratamientos' => 'Sueros y tratamientos',
+            'hidratacion' => 'Hidratación',
+            'proteccion-solar' => 'Protección solar',
+            'mascarillas-y-labios' => 'Mascarillas y labios',
+        ];
 
-        $hidratacion = Categoria::firstOrCreate(
-            ['tenant_id' => $tenant->id, 'slug' => 'hidratacion'],
-            ['nombre' => 'Hidratación'],
-        );
+        $idCategoria = [];
+        foreach ($categorias as $slug => $nombre) {
+            $idCategoria[$slug] = Categoria::firstOrCreate(
+                ['tenant_id' => $tenant->id, 'slug' => $slug],
+                ['nombre' => $nombre],
+            )->id;
+        }
 
-        $proteccion = Categoria::firstOrCreate(
-            ['tenant_id' => $tenant->id, 'slug' => 'proteccion-solar'],
-            ['nombre' => 'Protección solar'],
-        );
+        // Catálogo de ejemplo (reemplaza cualquier producto sembrado antes,
+        // para no acumular versiones viejas de prueba).
+        Producto::where('tenant_id', $tenant->id)->delete();
+
+        // Producto::create() no acepta tenant_id (no es fillable, a
+        // propósito — ver App\Shared\Models\Concerns\BelongsToTenant). Se
+        // asigna solo mediante el tenant resuelto en el contenedor, igual
+        // que en una petición real pasada por el middleware resolve-tenant.
+        app()->instance('currentTenantId', $tenant->id);
+
+        $img = fn (string $id) => "https://images.unsplash.com/photo-{$id}?w=800&q=80&fit=crop";
 
         $productos = [
-            ['categoria_id' => $limpieza->id, 'nombre' => 'Gel limpiador facial suave', 'slug' => 'gel-limpiador-facial-suave', 'precio' => 45000, 'stock' => 30],
-            ['categoria_id' => $limpieza->id, 'nombre' => 'Agua micelar', 'slug' => 'agua-micelar', 'precio' => 38000, 'stock' => 25],
-            ['categoria_id' => $hidratacion->id, 'nombre' => 'Serum de ácido hialurónico', 'slug' => 'serum-acido-hialuronico', 'precio' => 65000, 'stock' => 20],
-            ['categoria_id' => $hidratacion->id, 'nombre' => 'Crema hidratante en gel', 'slug' => 'crema-hidratante-en-gel', 'precio' => 52000, 'stock' => 18],
-            ['categoria_id' => $proteccion->id, 'nombre' => 'Protector solar FPS 50', 'slug' => 'protector-solar-fps-50', 'precio' => 58000, 'stock' => 22],
+            [
+                'categoria' => 'limpieza-facial',
+                'nombre' => 'Gel Limpiador Espumoso pH Balanceado',
+                'descripcion' => 'Limpieza suave que respeta la barrera cutánea, apto para uso diario mañana y noche.',
+                'precio' => 32000, 'stock' => 40,
+                'imagen_url' => $img('1748639320154-6ba118bccc74'),
+            ],
+            [
+                'categoria' => 'limpieza-facial',
+                'nombre' => 'Aceite Limpiador Desmaquillante',
+                'descripcion' => 'Disuelve maquillaje y protector solar sin resecar. Primer paso del double cleansing.',
+                'precio' => 42000, 'stock' => 28,
+                'imagen_url' => $img('1732861612232-50cbe19c1ae5'),
+            ],
+            [
+                'categoria' => 'tonicos-y-esencias',
+                'nombre' => 'Tónico Calmante Centella Asiática 77%',
+                'descripcion' => 'Calma el enrojecimiento y prepara la piel para el resto de la rutina.',
+                'precio' => 48000, 'stock' => 35,
+                'imagen_url' => $img('1576426863848-c21f53c60b19'),
+            ],
+            [
+                'categoria' => 'tonicos-y-esencias',
+                'nombre' => 'Esencia Hidratante Multi-Uso',
+                'descripcion' => 'Textura ligera que se puede aplicar en capas para hidratación profunda.',
+                'precio' => 55000, 'stock' => 20,
+                'imagen_url' => $img('1665763630810-e6251bdd392d'),
+            ],
+            [
+                'categoria' => 'sueros-y-tratamientos',
+                'nombre' => 'Sérum de Baba de Caracol 96%',
+                'descripcion' => 'El sérum viral por excelencia: ayuda a mejorar textura y marcas de acné.',
+                'precio' => 68000, 'stock' => 30,
+                'imagen_url' => $img('1679394270597-e90694d70350'),
+            ],
+            [
+                'categoria' => 'sueros-y-tratamientos',
+                'nombre' => 'Sérum de Vitamina C Iluminador',
+                'descripcion' => 'Antioxidante, unifica el tono y da luminosidad con uso constante.',
+                'precio' => 72000, 'stock' => 15,
+                'imagen_url' => $img('1613803745799-ba6c10aace85'),
+            ],
+            [
+                'categoria' => 'sueros-y-tratamientos',
+                'nombre' => 'Sérum de Niacinamida 10% + Zinc',
+                'descripcion' => 'Controla brillo y minimiza poros. Uno de los más buscados en redes.',
+                'precio' => 59000, 'stock' => 0,
+                'imagen_url' => $img('1627811015433-368c148f6c3c'),
+            ],
+            [
+                'categoria' => 'hidratacion',
+                'nombre' => 'Crema Hidratante en Gel Ligera',
+                'descripcion' => 'Hidratación sin sensación grasosa, ideal para piel mixta a grasa.',
+                'precio' => 46000, 'stock' => 33,
+                'imagen_url' => $img('1629732047847-50219e9c5aef'),
+            ],
+            [
+                'categoria' => 'hidratacion',
+                'nombre' => 'Crema de Noche Nutritiva con Péptidos',
+                'descripcion' => 'Textura rica para reparar la piel mientras duermes.',
+                'precio' => 78000, 'stock' => 12,
+                'imagen_url' => $img('1629380108574-40c083555579'),
+            ],
+            [
+                'categoria' => 'proteccion-solar',
+                'nombre' => 'Protector Solar FPS 50 Toque Seco',
+                'descripcion' => 'Sin rastro blanco, no engrasa. El paso que nunca se salta.',
+                'precio' => 54000, 'stock' => 40,
+                'imagen_url' => $img('1594055103006-7871176f1a7e'),
+            ],
+            [
+                'categoria' => 'proteccion-solar',
+                'nombre' => 'Stick Protector Solar FPS 50',
+                'descripcion' => 'Reaplicación fácil sobre maquillaje, perfecto para llevar en la cartera.',
+                'precio' => 39000, 'stock' => 25,
+                'imagen_url' => $img('1594325624708-75a0a6cf806f'),
+            ],
+            [
+                'categoria' => 'mascarillas-y-labios',
+                'nombre' => 'Mascarilla de Colágeno Nocturna',
+                'descripcion' => 'Se aplica antes de dormir para un efecto plump al despertar.',
+                'precio' => 15000, 'stock' => 50,
+                'imagen_url' => $img('1670201203150-bf8771401590'),
+            ],
+            [
+                'categoria' => 'mascarillas-y-labios',
+                'nombre' => 'Bálsamo Labial Nocturno',
+                'descripcion' => 'El infaltable "lip sleeping mask" que arrasa en redes sociales.',
+                'precio' => 62000, 'stock' => 45,
+                'imagen_url' => $img('1498706045548-6239e299361c'),
+            ],
+            [
+                'categoria' => 'mascarillas-y-labios',
+                'nombre' => 'Parches Antigranitos (32 unidades)',
+                'descripcion' => 'Absorben la impureza y protegen la zona mientras cicatriza.',
+                'precio' => 28000, 'stock' => 60,
+                'imagen_url' => $img('1597093218446-518d2127291a'),
+            ],
         ];
 
         foreach ($productos as $producto) {
-            Producto::firstOrCreate(
-                ['tenant_id' => $tenant->id, 'slug' => $producto['slug']],
-                [
-                    'categoria_id' => $producto['categoria_id'],
-                    'nombre' => $producto['nombre'],
-                    'precio' => $producto['precio'],
-                    'stock' => $producto['stock'],
-                    'activo' => true,
-                ],
-            );
+            Producto::create([
+                'categoria_id' => $idCategoria[$producto['categoria']],
+                'nombre' => $producto['nombre'],
+                'slug' => \Illuminate\Support\Str::slug($producto['nombre']),
+                'descripcion' => $producto['descripcion'],
+                'imagen_url' => $producto['imagen_url'],
+                'precio' => $producto['precio'],
+                'stock' => $producto['stock'],
+                'activo' => true,
+            ]);
         }
     }
 }

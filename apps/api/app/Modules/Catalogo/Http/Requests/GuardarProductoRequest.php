@@ -23,6 +23,7 @@ class GuardarProductoRequest extends FormRequest
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string'],
             'sku' => ['nullable', 'string', 'max:100'],
+            'imagen_url' => ['nullable', 'url', 'max:2048'],
             'precio' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
             'activo' => ['boolean'],
