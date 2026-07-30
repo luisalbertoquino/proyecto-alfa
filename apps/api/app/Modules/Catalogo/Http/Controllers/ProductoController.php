@@ -41,7 +41,11 @@ class ProductoController
 
     public function store(GuardarProductoRequest $request): JsonResponse
     {
-        $producto = $this->productos->crear($request->validated(), $request->slug());
+        $producto = $this->productos->crear(
+            $request->safe()->except('imagen'),
+            $request->slug(),
+            $request->file('imagen'),
+        );
 
         return response()->json(['data' => $producto->load('categoria')], 201);
     }
@@ -49,14 +53,19 @@ class ProductoController
     public function update(GuardarProductoRequest $request, int $id): JsonResponse
     {
         $producto = Producto::findOrFail($id);
-        $producto = $this->productos->actualizar($producto, $request->validated(), $request->slug());
+        $producto = $this->productos->actualizar(
+            $producto,
+            $request->safe()->except('imagen'),
+            $request->slug(),
+            $request->file('imagen'),
+        );
 
         return response()->json(['data' => $producto->load('categoria')]);
     }
 
     public function destroy(int $id): JsonResponse
     {
-        Producto::findOrFail($id)->delete();
+        $this->productos->eliminar(Producto::findOrFail($id));
 
         return response()->json(['data' => ['mensaje' => 'Producto eliminado.']]);
     }

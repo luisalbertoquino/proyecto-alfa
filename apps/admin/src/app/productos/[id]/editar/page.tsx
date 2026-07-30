@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ProtegerRuta } from "@/components/ProtegerRuta";
-import { ProductoForm, type DatosProductoForm } from "@/components/ProductoForm";
+import { ProductoForm, construirFormData, type DatosProductoForm } from "@/components/ProductoForm";
 import { apiFetch, ApiRequestError } from "@/lib/api";
 import type { Categoria, Producto } from "@/types/admin";
 
@@ -37,9 +37,12 @@ function FormularioEditarProducto() {
     setEnviando(true);
     setError(null);
     try {
+      // POST + _method=PATCH (method spoofing): PHP no parsea multipart en
+      // peticiones PATCH reales, así que la actualización con archivo tiene
+      // que viajar como POST — ver construirFormData en ProductoForm.tsx.
       await apiFetch(`/productos/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(datos),
+        method: "POST",
+        body: construirFormData(datos, { comoPatch: true }),
       });
       router.push("/productos");
     } catch (err) {

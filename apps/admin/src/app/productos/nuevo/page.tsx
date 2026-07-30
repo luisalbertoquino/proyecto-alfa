@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProtegerRuta } from "@/components/ProtegerRuta";
-import { ProductoForm, type DatosProductoForm } from "@/components/ProductoForm";
+import { ProductoForm, construirFormData, type DatosProductoForm } from "@/components/ProductoForm";
 import { apiFetch, ApiRequestError } from "@/lib/api";
 import type { Categoria } from "@/types/admin";
 
@@ -31,7 +31,7 @@ function FormularioNuevoProducto() {
     try {
       await apiFetch("/productos", {
         method: "POST",
-        body: JSON.stringify(datos),
+        body: construirFormData(datos),
       });
       router.push("/productos");
     } catch (err) {

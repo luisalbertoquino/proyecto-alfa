@@ -10,9 +10,36 @@ export type DatosProductoForm = {
   stock: number;
   descripcion: string;
   sku: string;
-  imagen_url: string;
+  imagen: File | null;
   activo: boolean;
 };
+
+/**
+ * Laravel no parsea multipart/form-data en peticiones PUT/PATCH reales (es
+ * una limitación de PHP, no de Laravel) — por eso la actualización con
+ * archivo va como POST con un campo _method=PATCH (method spoofing), que sí
+ * funciona. Ver también apps/admin/src/lib/api.ts para el manejo de headers.
+ */
+export function construirFormData(
+  datos: DatosProductoForm,
+  { comoPatch = false }: { comoPatch?: boolean } = {},
+): FormData {
+  const formData = new FormData();
+
+  if (comoPatch) formData.append("_method", "PATCH");
+  formData.append("nombre", datos.nombre);
+  if (datos.categoria_id !== null) {
+    formData.append("categoria_id", String(datos.categoria_id));
+  }
+  formData.append("precio", datos.precio);
+  formData.append("stock", String(datos.stock));
+  formData.append("descripcion", datos.descripcion);
+  formData.append("sku", datos.sku);
+  formData.append("activo", datos.activo ? "1" : "0");
+  if (datos.imagen) formData.append("imagen", datos.imagen);
+
+  return formData;
+}
 
 export function ProductoForm({
   categorias,
@@ -35,8 +62,17 @@ export function ProductoForm({
   const [stock, setStock] = useState(producto?.stock ?? 0);
   const [descripcion, setDescripcion] = useState(producto?.descripcion ?? "");
   const [sku, setSku] = useState(producto?.sku ?? "");
-  const [imagenUrl, setImagenUrl] = useState(producto?.imagen_url ?? "");
   const [activo, setActivo] = useState(producto?.activo ?? true);
+
+  const [imagen, setImagen] = useState<File | null>(null);
+  const [previaImagen, setPreviaImagen] = useState<string | null>(
+    producto?.imagen_url ?? null,
+  );
+
+  function elegirImagen(archivo: File | null) {
+    setImagen(archivo);
+    setPreviaImagen(archivo ? URL.createObjectURL(archivo) : producto?.imagen_url ?? null);
+  }
 
   return (
     <form
@@ -49,7 +85,7 @@ export function ProductoForm({
           stock,
           descripcion,
           sku,
-          imagen_url: imagenUrl,
+          imagen,
           activo,
         });
       }}
@@ -118,23 +154,20 @@ export function ProductoForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium">
-          URL de la imagen (opcional)
-        </label>
+        <label className="block text-sm font-medium">Foto (opcional)</label>
         <input
-          type="url"
-          value={imagenUrl}
-          onChange={(e) => setImagenUrl(e.target.value)}
-          placeholder="https://..."
-          className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+          type="file"
+          accept="image/*"
+          onChange={(e) => elegirImagen(e.target.files?.[0] ?? null)}
+          className="mt-1 w-full text-sm"
         />
-        {imagenUrl && (
-          // eslint-disable-next-line @next/next/no-img-element -- vista previa de una URL externa arbitraria
+        <p className="mt-1 text-xs text-neutral-500">JPG o WEBP, máximo 4 MB.</p>
+        {previaImagen && (
+          // eslint-disable-next-line @next/next/no-img-element -- vista previa de un archivo local o de la foto ya guardada
           <img
-            src={imagenUrl}
+            src={previaImagen}
             alt="Vista previa"
             className="mt-2 h-24 w-24 rounded object-cover"
-            onError={(e) => (e.currentTarget.style.display = "none")}
           />
         )}
       </div>

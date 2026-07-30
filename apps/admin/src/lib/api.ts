@@ -38,12 +38,15 @@ export async function apiFetch<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const token = getToken();
+  const esFormData = options.body instanceof FormData;
 
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       Accept: "application/json",
-      "Content-Type": "application/json",
+      // FormData (subida de archivos) NO lleva Content-Type manual: el
+      // navegador debe fijar el boundary del multipart él mismo.
+      ...(esFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
