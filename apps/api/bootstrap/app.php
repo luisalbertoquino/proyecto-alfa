@@ -8,6 +8,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -66,6 +67,11 @@ return Application::configure(basePath: dirname(__DIR__))
                     'mensaje' => 'Debes iniciar sesión.',
                     'detalles' => (object) [],
                 ]], 401),
+                $e instanceof ThrottleRequestsException => response()->json(['error' => [
+                    'codigo' => 'RATE_LIMIT_EXCEDIDO',
+                    'mensaje' => 'Demasiadas peticiones. Intenta de nuevo en unos segundos.',
+                    'detalles' => ['reintentar_en_segundos' => (int) ($e->getHeaders()['Retry-After'] ?? 60)],
+                ]], 429, $e->getHeaders()),
                 default => null,
             };
         });

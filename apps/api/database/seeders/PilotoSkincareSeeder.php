@@ -19,9 +19,14 @@ class PilotoSkincareSeeder extends Seeder
 {
     public function run(): void
     {
+        // El nombre real del negocio todavía no está definido con Angie — se
+        // usa "Skincare Piloto" como marcador presentable (nada de anotaciones
+        // tipo "(por definir)" aquí: este valor se muestra tal cual en la UI
+        // del panel y de la tienda, ver docs/estado-actual.md para el estado
+        // real de esta decisión pendiente).
         $tenant = Tenant::firstOrCreate(
             ['slug' => 'skincare-piloto'],
-            ['nombre' => 'Skincare Piloto (nombre por definir)'],
+            ['nombre' => 'Skincare Piloto'],
         );
 
         User::firstOrCreate(
