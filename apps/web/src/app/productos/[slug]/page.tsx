@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { apiFetch, ApiRequestError } from "@/lib/api";
 import { formatearPrecio } from "@/lib/formato";
 import { AgregarAlCarrito } from "@/components/AgregarAlCarrito";
+import { GaleriaProducto } from "@/components/GaleriaProducto";
 import type { Producto } from "@/types/tienda";
 
 export default async function ProductoPage({
@@ -23,16 +24,11 @@ export default async function ProductoPage({
 
   return (
     <article className="max-w-xl">
-      {producto.imagen_url && (
-        <div className="aspect-square w-full overflow-hidden rounded-lg bg-neutral-100">
-          {/* eslint-disable-next-line @next/next/no-img-element -- imagen externa (Unsplash), sin necesidad del optimizador de Next para un prototipo */}
-          <img
-            src={producto.imagen_url}
-            alt={producto.nombre}
-            className="h-full w-full object-cover"
-          />
-        </div>
-      )}
+      <GaleriaProducto
+        nombre={producto.nombre}
+        imagenPortada={producto.imagen_url}
+        imagenesGaleria={(producto.imagenes ?? []).map((i) => i.url)}
+      />
       {producto.categoria && (
         <p className="mt-4 text-xs uppercase tracking-wide text-neutral-500">
           {producto.categoria.nombre}
@@ -42,6 +38,18 @@ export default async function ProductoPage({
       <p className="mt-3 text-xl font-semibold">
         {formatearPrecio(producto.precio)}
       </p>
+      {producto.necesidades && producto.necesidades.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {producto.necesidades.map((n) => (
+            <span
+              key={n.id}
+              className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600"
+            >
+              {n.nombre}
+            </span>
+          ))}
+        </div>
+      )}
       {producto.descripcion && (
         <p className="mt-4 text-neutral-700">{producto.descripcion}</p>
       )}

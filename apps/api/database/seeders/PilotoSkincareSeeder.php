@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Modules\Catalogo\Models\Categoria;
+use App\Modules\Catalogo\Models\Necesidad;
 use App\Modules\Catalogo\Models\Producto;
 use App\Shared\Models\Tenant;
 use Illuminate\Database\Seeder;
@@ -60,6 +61,27 @@ class PilotoSkincareSeeder extends Seeder
             )->id;
         }
 
+        // "Necesidad de piel" — investigado de competencia real (chokchok.co,
+        // rosavainilla.co), ver docs/estado-actual.md.
+        $necesidades = [
+            'acne' => 'Acné',
+            'antiedad' => 'Cuidado antiedad',
+            'manchas' => 'Manchas',
+            'poros' => 'Poros',
+            'puntos-negros' => 'Puntos negros',
+            'rojez' => 'Rojez',
+            'textura' => 'Textura',
+            'luminosidad' => 'Luminosidad',
+        ];
+
+        $idNecesidad = [];
+        foreach ($necesidades as $slug => $nombre) {
+            $idNecesidad[$slug] = Necesidad::firstOrCreate(
+                ['tenant_id' => $tenant->id, 'slug' => $slug],
+                ['nombre' => $nombre],
+            )->id;
+        }
+
         // Catálogo de ejemplo (reemplaza cualquier producto sembrado antes,
         // para no acumular versiones viejas de prueba).
         Producto::where('tenant_id', $tenant->id)->delete();
@@ -79,6 +101,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Limpieza suave que respeta la barrera cutánea, apto para uso diario mañana y noche.',
                 'precio' => 32000, 'stock' => 40,
                 'imagen_url' => $img('1748639320154-6ba118bccc74'),
+                'necesidades' => ['acne', 'poros'], 'destacado' => false,
             ],
             [
                 'categoria' => 'limpieza-facial',
@@ -86,6 +109,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Disuelve maquillaje y protector solar sin resecar. Primer paso del double cleansing.',
                 'precio' => 42000, 'stock' => 28,
                 'imagen_url' => $img('1732861612232-50cbe19c1ae5'),
+                'necesidades' => ['poros'], 'destacado' => false,
             ],
             [
                 'categoria' => 'tonicos-y-esencias',
@@ -93,6 +117,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Calma el enrojecimiento y prepara la piel para el resto de la rutina.',
                 'precio' => 48000, 'stock' => 35,
                 'imagen_url' => $img('1576426863848-c21f53c60b19'),
+                'necesidades' => ['rojez', 'textura'], 'destacado' => true,
             ],
             [
                 'categoria' => 'tonicos-y-esencias',
@@ -100,6 +125,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Textura ligera que se puede aplicar en capas para hidratación profunda.',
                 'precio' => 55000, 'stock' => 20,
                 'imagen_url' => $img('1665763630810-e6251bdd392d'),
+                'necesidades' => ['textura'], 'destacado' => false,
             ],
             [
                 'categoria' => 'sueros-y-tratamientos',
@@ -107,6 +133,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'El sérum viral por excelencia: ayuda a mejorar textura y marcas de acné.',
                 'precio' => 68000, 'stock' => 30,
                 'imagen_url' => $img('1679394270597-e90694d70350'),
+                'necesidades' => ['acne', 'textura'], 'destacado' => true,
             ],
             [
                 'categoria' => 'sueros-y-tratamientos',
@@ -114,6 +141,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Antioxidante, unifica el tono y da luminosidad con uso constante.',
                 'precio' => 72000, 'stock' => 15,
                 'imagen_url' => $img('1613803745799-ba6c10aace85'),
+                'necesidades' => ['manchas', 'luminosidad'], 'destacado' => false,
             ],
             [
                 'categoria' => 'sueros-y-tratamientos',
@@ -121,6 +149,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Controla brillo y minimiza poros. Uno de los más buscados en redes.',
                 'precio' => 59000, 'stock' => 0,
                 'imagen_url' => $img('1627811015433-368c148f6c3c'),
+                'necesidades' => ['acne', 'poros'], 'destacado' => false,
             ],
             [
                 'categoria' => 'hidratacion',
@@ -128,6 +157,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Hidratación sin sensación grasosa, ideal para piel mixta a grasa.',
                 'precio' => 46000, 'stock' => 33,
                 'imagen_url' => $img('1629732047847-50219e9c5aef'),
+                'necesidades' => ['poros'], 'destacado' => false,
             ],
             [
                 'categoria' => 'hidratacion',
@@ -135,6 +165,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Textura rica para reparar la piel mientras duermes.',
                 'precio' => 78000, 'stock' => 12,
                 'imagen_url' => $img('1629380108574-40c083555579'),
+                'necesidades' => ['antiedad', 'textura'], 'destacado' => false,
             ],
             [
                 'categoria' => 'proteccion-solar',
@@ -142,6 +173,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Sin rastro blanco, no engrasa. El paso que nunca se salta.',
                 'precio' => 54000, 'stock' => 40,
                 'imagen_url' => $img('1594055103006-7871176f1a7e'),
+                'necesidades' => ['manchas'], 'destacado' => true,
             ],
             [
                 'categoria' => 'proteccion-solar',
@@ -149,6 +181,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Reaplicación fácil sobre maquillaje, perfecto para llevar en la cartera.',
                 'precio' => 39000, 'stock' => 25,
                 'imagen_url' => $img('1594325624708-75a0a6cf806f'),
+                'necesidades' => ['manchas'], 'destacado' => false,
             ],
             [
                 'categoria' => 'mascarillas-y-labios',
@@ -156,6 +189,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Se aplica antes de dormir para un efecto plump al despertar.',
                 'precio' => 15000, 'stock' => 50,
                 'imagen_url' => $img('1670201203150-bf8771401590'),
+                'necesidades' => ['antiedad', 'luminosidad'], 'destacado' => false,
             ],
             [
                 'categoria' => 'mascarillas-y-labios',
@@ -163,6 +197,7 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'El infaltable "lip sleeping mask" que arrasa en redes sociales.',
                 'precio' => 62000, 'stock' => 45,
                 'imagen_url' => $img('1498706045548-6239e299361c'),
+                'necesidades' => [], 'destacado' => true,
             ],
             [
                 'categoria' => 'mascarillas-y-labios',
@@ -170,11 +205,12 @@ class PilotoSkincareSeeder extends Seeder
                 'descripcion' => 'Absorben la impureza y protegen la zona mientras cicatriza.',
                 'precio' => 28000, 'stock' => 60,
                 'imagen_url' => $img('1597093218446-518d2127291a'),
+                'necesidades' => ['acne', 'puntos-negros'], 'destacado' => true,
             ],
         ];
 
         foreach ($productos as $producto) {
-            Producto::create([
+            $nuevo = Producto::create([
                 'categoria_id' => $idCategoria[$producto['categoria']],
                 'nombre' => $producto['nombre'],
                 'slug' => \Illuminate\Support\Str::slug($producto['nombre']),
@@ -183,7 +219,11 @@ class PilotoSkincareSeeder extends Seeder
                 'precio' => $producto['precio'],
                 'stock' => $producto['stock'],
                 'activo' => true,
+                'destacado' => $producto['destacado'],
             ]);
+
+            $idsNecesidades = collect($producto['necesidades'])->map(fn ($slug) => $idNecesidad[$slug]);
+            $nuevo->necesidades()->sync($idsNecesidades);
         }
     }
 }

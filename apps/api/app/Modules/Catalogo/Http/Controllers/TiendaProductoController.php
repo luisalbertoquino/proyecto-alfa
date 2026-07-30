@@ -4,6 +4,7 @@ namespace App\Modules\Catalogo\Http\Controllers;
 
 use App\Modules\Catalogo\Models\Producto;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Catálogo visible para la tienda pública (sin login). Solo expone
@@ -12,19 +13,23 @@ use Illuminate\Http\JsonResponse;
  */
 class TiendaProductoController
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => Producto::with('categoria')
-                ->where('activo', true)
-                ->orderBy('nombre')
-                ->get(),
-        ]);
+        $productos = Producto::with('categoria', 'necesidades')
+            ->where('activo', true)
+            ->when($request->query('destacado'), fn ($q) => $q->where('destacado', true))
+            ->when($request->query('necesidad'), function ($q, $slugNecesidad) {
+                $q->whereHas('necesidades', fn ($nq) => $nq->where('slug', $slugNecesidad));
+            })
+            ->orderBy('nombre')
+            ->get();
+
+        return response()->json(['data' => $productos]);
     }
 
     public function show(string $slug): JsonResponse
     {
-        $producto = Producto::with('categoria')
+        $producto = Producto::with('categoria', 'necesidades', 'imagenes')
             ->where('activo', true)
             ->where('slug', $slug)
             ->firstOrFail();

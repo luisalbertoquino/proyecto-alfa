@@ -31,6 +31,11 @@ class GuardarProductoRequest extends FormRequest
             'precio' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
             'activo' => ['boolean'],
+            'destacado' => ['boolean'],
+            'necesidades' => ['array'],
+            'necesidades.*' => [
+                Rule::exists('necesidades', 'id')->where('tenant_id', app('currentTenantId')),
+            ],
         ];
     }
 
@@ -42,7 +47,16 @@ class GuardarProductoRequest extends FormRequest
     {
         $this->merge([
             'activo' => $this->boolean('activo', true),
+            'destacado' => $this->boolean('destacado', false),
         ]);
+    }
+
+    /**
+     * @return int[]
+     */
+    public function necesidades(): array
+    {
+        return $this->input('necesidades', []);
     }
 
     public function slug(): string

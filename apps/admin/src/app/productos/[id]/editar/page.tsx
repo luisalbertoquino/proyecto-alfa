@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ProtegerRuta } from "@/components/ProtegerRuta";
 import { ProductoForm, construirFormData, type DatosProductoForm } from "@/components/ProductoForm";
+import { GaleriaProductoManager } from "@/components/GaleriaProductoManager";
 import { apiFetch, ApiRequestError } from "@/lib/api";
-import type { Categoria, Producto } from "@/types/admin";
+import type { Categoria, Necesidad, Producto } from "@/types/admin";
 
 export default function EditarProductoPage() {
   return (
@@ -20,6 +21,7 @@ function FormularioEditarProducto() {
   const router = useRouter();
   const [producto, setProducto] = useState<Producto | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [necesidades, setNecesidades] = useState<Necesidad[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,9 +29,11 @@ function FormularioEditarProducto() {
     Promise.all([
       apiFetch<Producto>(`/productos/${id}`),
       apiFetch<Categoria[]>("/categorias"),
-    ]).then(([p, c]) => {
+      apiFetch<Necesidad[]>("/necesidades"),
+    ]).then(([p, c, n]) => {
       setProducto(p);
       setCategorias(c);
+      setNecesidades(n);
     });
   }, [id]);
 
@@ -62,10 +66,17 @@ function FormularioEditarProducto() {
       <div className="mt-6">
         <ProductoForm
           categorias={categorias}
+          necesidades={necesidades}
           producto={producto}
           enviando={enviando}
           error={error}
           onSubmit={guardar}
+        />
+      </div>
+      <div className="mt-8 border-t border-neutral-200 pt-6">
+        <GaleriaProductoManager
+          productoId={producto.id}
+          imagenesIniciales={producto.imagenes ?? []}
         />
       </div>
     </div>

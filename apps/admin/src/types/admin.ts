@@ -4,6 +4,18 @@ export type Categoria = {
   slug: string;
 };
 
+export type Necesidad = {
+  id: number;
+  nombre: string;
+  slug: string;
+};
+
+export type ImagenProducto = {
+  id: number;
+  url: string;
+  orden: number;
+};
+
 export type Producto = {
   id: number;
   nombre: string;
@@ -14,8 +26,11 @@ export type Producto = {
   precio: string;
   stock: number;
   activo: boolean;
+  destacado: boolean;
   categoria: Categoria | null;
   categoria_id: number | null;
+  necesidades?: Necesidad[];
+  imagenes?: ImagenProducto[];
 };
 
 export type Cliente = {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Categoria, Producto } from "@/types/admin";
+import type { Categoria, Necesidad, Producto } from "@/types/admin";
 
 export type DatosProductoForm = {
   nombre: string;
@@ -12,6 +12,8 @@ export type DatosProductoForm = {
   sku: string;
   imagen: File | null;
   activo: boolean;
+  destacado: boolean;
+  necesidades: number[];
 };
 
 /**
@@ -36,6 +38,8 @@ export function construirFormData(
   formData.append("descripcion", datos.descripcion);
   formData.append("sku", datos.sku);
   formData.append("activo", datos.activo ? "1" : "0");
+  formData.append("destacado", datos.destacado ? "1" : "0");
+  datos.necesidades.forEach((id) => formData.append("necesidades[]", String(id)));
   if (datos.imagen) formData.append("imagen", datos.imagen);
 
   return formData;
@@ -43,12 +47,14 @@ export function construirFormData(
 
 export function ProductoForm({
   categorias,
+  necesidades,
   producto,
   enviando,
   error,
   onSubmit,
 }: {
   categorias: Categoria[];
+  necesidades: Necesidad[];
   producto?: Producto;
   enviando: boolean;
   error: string | null;
@@ -63,6 +69,10 @@ export function ProductoForm({
   const [descripcion, setDescripcion] = useState(producto?.descripcion ?? "");
   const [sku, setSku] = useState(producto?.sku ?? "");
   const [activo, setActivo] = useState(producto?.activo ?? true);
+  const [destacado, setDestacado] = useState(producto?.destacado ?? false);
+  const [necesidadesElegidas, setNecesidadesElegidas] = useState<number[]>(
+    producto?.necesidades?.map((n) => n.id) ?? [],
+  );
 
   const [imagen, setImagen] = useState<File | null>(null);
   const [previaImagen, setPreviaImagen] = useState<string | null>(
@@ -72,6 +82,12 @@ export function ProductoForm({
   function elegirImagen(archivo: File | null) {
     setImagen(archivo);
     setPreviaImagen(archivo ? URL.createObjectURL(archivo) : producto?.imagen_url ?? null);
+  }
+
+  function alternarNecesidad(id: number) {
+    setNecesidadesElegidas((actual) =>
+      actual.includes(id) ? actual.filter((n) => n !== id) : [...actual, id],
+    );
   }
 
   return (
@@ -87,6 +103,8 @@ export function ProductoForm({
           sku,
           imagen,
           activo,
+          destacado,
+          necesidades: necesidadesElegidas,
         });
       }}
       className="max-w-lg space-y-4"
@@ -154,7 +172,7 @@ export function ProductoForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium">Foto (opcional)</label>
+        <label className="block text-sm font-medium">Foto de portada (opcional)</label>
         <input
           type="file"
           accept="image/*"
@@ -184,6 +202,34 @@ export function ProductoForm({
         />
       </div>
 
+      {necesidades.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium">
+            Necesidades de piel (opcional)
+          </label>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {necesidades.map((n) => (
+              <label
+                key={n.id}
+                className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${
+                  necesidadesElegidas.includes(n.id)
+                    ? "border-neutral-900 bg-neutral-900 text-white"
+                    : "border-neutral-300 text-neutral-700"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="hidden"
+                  checked={necesidadesElegidas.includes(n.id)}
+                  onChange={() => alternarNecesidad(n.id)}
+                />
+                {n.nombre}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -191,6 +237,15 @@ export function ProductoForm({
           onChange={(e) => setActivo(e.target.checked)}
         />
         Visible en la tienda
+      </label>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={destacado}
+          onChange={(e) => setDestacado(e.target.checked)}
+        />
+        Destacado (aparece en &quot;Más vendidos&quot; del home)
       </label>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

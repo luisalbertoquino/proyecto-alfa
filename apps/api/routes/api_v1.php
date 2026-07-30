@@ -1,6 +1,8 @@
 <?php
 
 use App\Modules\Catalogo\Http\Controllers\CategoriaController;
+use App\Modules\Catalogo\Http\Controllers\ImagenProductoController;
+use App\Modules\Catalogo\Http\Controllers\NecesidadController;
 use App\Modules\Catalogo\Http\Controllers\ProductoController;
 use App\Modules\Catalogo\Http\Controllers\TiendaProductoController;
 use App\Modules\Pedidos\Http\Controllers\PedidoController;
@@ -22,6 +24,7 @@ Route::middleware(['resolve-public-tenant'])->prefix('tienda')->group(function (
     Route::middleware('throttle:tienda')->group(function () {
         Route::get('/productos', [TiendaProductoController::class, 'index']);
         Route::get('/productos/{slug}', [TiendaProductoController::class, 'show']);
+        Route::get('/necesidades', [NecesidadController::class, 'index']);
     });
     Route::post('/pedidos', [TiendaPedidoController::class, 'store'])->middleware('throttle:checkout');
 });
@@ -37,8 +40,14 @@ Route::middleware(['auth:sanctum', 'resolve-tenant', 'throttle:api'])->group(fun
     Route::patch('/productos/{id}', [ProductoController::class, 'update'])->whereNumber('id');
     Route::delete('/productos/{id}', [ProductoController::class, 'destroy'])->whereNumber('id');
 
+    Route::post('/productos/{productoId}/imagenes', [ImagenProductoController::class, 'store'])->whereNumber('productoId');
+    Route::delete('/productos/{productoId}/imagenes/{imagenId}', [ImagenProductoController::class, 'destroy'])->whereNumber(['productoId', 'imagenId']);
+
     Route::get('/categorias', [CategoriaController::class, 'index']);
     Route::post('/categorias', [CategoriaController::class, 'store']);
+
+    Route::get('/necesidades', [NecesidadController::class, 'index']);
+    Route::post('/necesidades', [NecesidadController::class, 'store']);
 
     Route::get('/pedidos', [PedidoController::class, 'index']);
     Route::get('/pedidos/{id}', [PedidoController::class, 'show'])->whereNumber('id');

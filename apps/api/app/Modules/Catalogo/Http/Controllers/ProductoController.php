@@ -19,7 +19,7 @@ class ProductoController
 
     public function index(): JsonResponse
     {
-        $productos = Producto::with('categoria')
+        $productos = Producto::with('categoria', 'necesidades')
             ->orderBy('nombre')
             ->paginate(15);
 
@@ -36,7 +36,9 @@ class ProductoController
 
     public function show(int $id): JsonResponse
     {
-        return response()->json(['data' => Producto::with('categoria')->findOrFail($id)]);
+        $producto = Producto::with('categoria', 'necesidades', 'imagenes')->findOrFail($id);
+
+        return response()->json(['data' => $producto]);
     }
 
     public function store(GuardarProductoRequest $request): JsonResponse
@@ -45,9 +47,10 @@ class ProductoController
             $request->safe()->except('imagen'),
             $request->slug(),
             $request->file('imagen'),
+            $request->necesidades(),
         );
 
-        return response()->json(['data' => $producto->load('categoria')], 201);
+        return response()->json(['data' => $producto->load('categoria', 'necesidades')], 201);
     }
 
     public function update(GuardarProductoRequest $request, int $id): JsonResponse
@@ -58,9 +61,10 @@ class ProductoController
             $request->safe()->except('imagen'),
             $request->slug(),
             $request->file('imagen'),
+            $request->necesidades(),
         );
 
-        return response()->json(['data' => $producto->load('categoria')]);
+        return response()->json(['data' => $producto->load('categoria', 'necesidades')]);
     }
 
     public function destroy(int $id): JsonResponse

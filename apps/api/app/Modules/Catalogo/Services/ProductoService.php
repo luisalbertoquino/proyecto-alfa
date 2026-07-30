@@ -9,10 +9,15 @@ use Illuminate\Support\Str;
 
 class ProductoService
 {
+    public function __construct(
+        private readonly GaleriaProductoService $galeria,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $datos
+     * @param  int[]  $necesidades
      */
-    public function crear(array $datos, string $nombreParaSlug, ?UploadedFile $imagen = null): Producto
+    public function crear(array $datos, string $nombreParaSlug, ?UploadedFile $imagen = null, array $necesidades = []): Producto
     {
         $datos['slug'] = $this->slugUnico($nombreParaSlug);
 
@@ -20,13 +25,18 @@ class ProductoService
             $datos['imagen_url'] = $this->guardarImagen($imagen);
         }
 
-        return Producto::create($datos);
+        unset($datos['necesidades']);
+        $producto = Producto::create($datos);
+        $producto->necesidades()->sync($necesidades);
+
+        return $producto;
     }
 
     /**
      * @param  array<string, mixed>  $datos
+     * @param  int[]  $necesidades
      */
-    public function actualizar(Producto $producto, array $datos, string $nombreParaSlug, ?UploadedFile $imagen = null): Producto
+    public function actualizar(Producto $producto, array $datos, string $nombreParaSlug, ?UploadedFile $imagen = null, array $necesidades = []): Producto
     {
         if ($nombreParaSlug !== $producto->nombre) {
             $datos['slug'] = $this->slugUnico($nombreParaSlug, ignorarId: $producto->id);
@@ -37,7 +47,9 @@ class ProductoService
             $datos['imagen_url'] = $this->guardarImagen($imagen);
         }
 
+        unset($datos['necesidades']);
         $producto->update($datos);
+        $producto->necesidades()->sync($necesidades);
 
         return $producto;
     }
@@ -45,6 +57,14 @@ class ProductoService
     public function eliminar(Producto $producto): void
     {
         $this->eliminarImagenPropia($producto->imagen_url);
+
+        // El borrado en cascada de producto_imagenes es solo de las filas;
+        // los archivos físicos hay que borrarlos aparte, antes de perder la
+        // referencia a sus URLs.
+        foreach ($producto->imagenes as $imagenProducto) {
+            $this->galeria->eliminar($imagenProducto);
+        }
+
         $producto->delete();
     }
 
