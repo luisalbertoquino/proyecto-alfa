@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Catalogo\Models\Categoria;
 use App\Modules\Catalogo\Models\Necesidad;
 use App\Modules\Catalogo\Models\Producto;
+use App\Modules\Catalogo\Models\Rutina;
 use App\Shared\Models\Tenant;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -34,6 +35,17 @@ class PilotoSkincareSeeder extends Seeder
             ['slug' => 'skincare-piloto'],
             ['nombre' => 'Skincare Piloto'],
         );
+
+        // Contenido institucional inventado a propósito (el usuario pidió no
+        // bloquear el prototipo por esto) — editable desde el panel en
+        // Configuración del negocio, se reemplaza por el texto real cuando
+        // Angie lo defina.
+        $tenant->update([
+            'quienes_somos' => "Somos una tienda curada de skincare coreano: elegimos cada producto probándolo primero nosotros, no por lo que esté de moda. Nacimos de las ganas de tener, en un solo lugar, las rutinas que de verdad funcionan — sin relleno, sin productos que solo se ven bonitos en una foto.\n\nEste texto es un ejemplo de partida y se reemplaza por la historia real de la marca cuando esté lista.",
+            'contacto_whatsapp' => '+57 300 000 0000',
+            'contacto_email' => 'hola@skincarepiloto.test',
+            'contacto_horario' => 'Lunes a sábado, 9:00 a.m. – 6:00 p.m.',
+        ]);
 
         User::firstOrCreate(
             ['email' => 'admin@skincarepiloto.test'],
@@ -209,6 +221,7 @@ class PilotoSkincareSeeder extends Seeder
             ],
         ];
 
+        $idProducto = [];
         foreach ($productos as $producto) {
             $nuevo = Producto::create([
                 'categoria_id' => $idCategoria[$producto['categoria']],
@@ -224,6 +237,65 @@ class PilotoSkincareSeeder extends Seeder
 
             $idsNecesidades = collect($producto['necesidades'])->map(fn ($slug) => $idNecesidad[$slug]);
             $nuevo->necesidades()->sync($idsNecesidades);
+            $idProducto[$nuevo->slug] = $nuevo->id;
+        }
+
+        // Rutinas sugeridas — curaduría de ejemplo inventada (el usuario
+        // pidió no bloquear el prototipo por esto); se ajusta desde el panel
+        // cuando Angie decida qué va en cada rutina de verdad.
+        Rutina::where('tenant_id', $tenant->id)->delete();
+
+        $rutinas = [
+            [
+                'nombre' => 'Rutina de 3 pasos',
+                'descripcion' => 'Lo mínimo para empezar: limpiar, calmar e hidratar.',
+                'productos' => [
+                    'gel-limpiador-espumoso-ph-balanceado',
+                    'tonico-calmante-centella-asiatica-77',
+                    'crema-hidratante-en-gel-ligera',
+                ],
+            ],
+            [
+                'nombre' => 'Rutina de 5 pasos',
+                'descripcion' => 'La rutina de 3 pasos, más un sérum de tratamiento y protector solar.',
+                'productos' => [
+                    'gel-limpiador-espumoso-ph-balanceado',
+                    'tonico-calmante-centella-asiatica-77',
+                    'serum-de-baba-de-caracol-96',
+                    'crema-hidratante-en-gel-ligera',
+                    'protector-solar-fps-50-toque-seco',
+                ],
+            ],
+            [
+                'nombre' => 'Rutina de 10 pasos',
+                'descripcion' => 'La rutina K-beauty completa, doble limpieza incluida.',
+                'productos' => [
+                    'aceite-limpiador-desmaquillante',
+                    'gel-limpiador-espumoso-ph-balanceado',
+                    'tonico-calmante-centella-asiatica-77',
+                    'esencia-hidratante-multi-uso',
+                    'serum-de-baba-de-caracol-96',
+                    'serum-de-vitamina-c-iluminador',
+                    'serum-de-niacinamida-10-zinc',
+                    'crema-de-noche-nutritiva-con-peptidos',
+                    'protector-solar-fps-50-toque-seco',
+                    'balsamo-labial-nocturno',
+                ],
+            ],
+        ];
+
+        foreach ($rutinas as $rutina) {
+            $nueva = Rutina::create([
+                'nombre' => $rutina['nombre'],
+                'slug' => \Illuminate\Support\Str::slug($rutina['nombre']),
+                'descripcion' => $rutina['descripcion'],
+            ]);
+
+            $conOrden = [];
+            foreach (array_values($rutina['productos']) as $indice => $slugProducto) {
+                $conOrden[$idProducto[$slugProducto]] = ['orden' => $indice];
+            }
+            $nueva->productos()->sync($conOrden);
         }
     }
 }

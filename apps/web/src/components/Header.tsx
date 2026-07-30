@@ -16,6 +16,9 @@ export function Header() {
           <Link href="/" className="hover:text-neutral-900">
             Tienda
           </Link>
+          <Link href="/rutinas" className="hover:text-neutral-900">
+            Rutinas
+          </Link>
           <Link href="/quienes-somos" className="hover:text-neutral-900">
             Quiénes somos
           </Link>

@@ -13,6 +13,8 @@ export function Nav() {
   const enlaces = [
     { href: "/pedidos", texto: "Pedidos" },
     { href: "/productos", texto: "Productos" },
+    { href: "/rutinas", texto: "Rutinas" },
+    { href: "/negocio", texto: "Configuración" },
   ];
 
   return (

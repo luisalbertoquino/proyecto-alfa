@@ -4,10 +4,12 @@ use App\Modules\Catalogo\Http\Controllers\CategoriaController;
 use App\Modules\Catalogo\Http\Controllers\ImagenProductoController;
 use App\Modules\Catalogo\Http\Controllers\NecesidadController;
 use App\Modules\Catalogo\Http\Controllers\ProductoController;
+use App\Modules\Catalogo\Http\Controllers\RutinaController;
 use App\Modules\Catalogo\Http\Controllers\TiendaProductoController;
 use App\Modules\Pedidos\Http\Controllers\PedidoController;
 use App\Modules\Pedidos\Http\Controllers\TiendaPedidoController;
 use App\Shared\Http\Controllers\AuthController;
+use App\Shared\Http\Controllers\NegocioController;
 use Illuminate\Support\Facades\Route;
 
 // Ver docs/architecture/apis.md: rutas en español, plural, sin verbos
@@ -25,6 +27,9 @@ Route::middleware(['resolve-public-tenant'])->prefix('tienda')->group(function (
         Route::get('/productos', [TiendaProductoController::class, 'index']);
         Route::get('/productos/{slug}', [TiendaProductoController::class, 'show']);
         Route::get('/necesidades', [NecesidadController::class, 'index']);
+        Route::get('/rutinas', [RutinaController::class, 'index']);
+        Route::get('/rutinas/{id}', [RutinaController::class, 'show'])->whereNumber('id');
+        Route::get('/negocio', [NegocioController::class, 'show']);
     });
     Route::post('/pedidos', [TiendaPedidoController::class, 'store'])->middleware('throttle:checkout');
 });
@@ -48,6 +53,15 @@ Route::middleware(['auth:sanctum', 'resolve-tenant', 'throttle:api'])->group(fun
 
     Route::get('/necesidades', [NecesidadController::class, 'index']);
     Route::post('/necesidades', [NecesidadController::class, 'store']);
+
+    Route::get('/rutinas', [RutinaController::class, 'index']);
+    Route::post('/rutinas', [RutinaController::class, 'store']);
+    Route::get('/rutinas/{id}', [RutinaController::class, 'show'])->whereNumber('id');
+    Route::patch('/rutinas/{id}', [RutinaController::class, 'update'])->whereNumber('id');
+    Route::delete('/rutinas/{id}', [RutinaController::class, 'destroy'])->whereNumber('id');
+
+    Route::get('/negocio', [NegocioController::class, 'show']);
+    Route::patch('/negocio', [NegocioController::class, 'update']);
 
     Route::get('/pedidos', [PedidoController::class, 'index']);
     Route::get('/pedidos/{id}', [PedidoController::class, 'show'])->whereNumber('id');

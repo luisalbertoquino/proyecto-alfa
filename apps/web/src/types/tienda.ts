@@ -31,6 +31,24 @@ export type Producto = {
   imagenes?: ImagenProducto[];
 };
 
+export type Negocio = {
+  nombre: string;
+  quienes_somos: string | null;
+  contacto_whatsapp: string | null;
+  contacto_email: string | null;
+  contacto_horario: string | null;
+};
+
+export type ProductoEnRutina = Producto & { pivot: { orden: number } };
+
+export type Rutina = {
+  id: number;
+  nombre: string;
+  slug: string;
+  descripcion: string | null;
+  productos: ProductoEnRutina[];
+};
+
 export type ApiError = {
   error: {
     codigo: string;

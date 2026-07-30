@@ -22,6 +22,10 @@ class Tenant extends Model
     protected $fillable = [
         'nombre',
         'slug',
+        'quienes_somos',
+        'contacto_whatsapp',
+        'contacto_email',
+        'contacto_horario',
     ];
 
     protected static function newFactory(): TenantFactory
