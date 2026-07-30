@@ -38,6 +38,12 @@ docker-compose.override.yml
 *.rdb
 dump.rdb
 
+# Logs de procesos de desarrollo lanzados en segundo plano
+next-dev.log
+next-dev-err.log
+serve-out.log
+serve-err.log
+
 # Build / test genéricos
 dist/
 build/

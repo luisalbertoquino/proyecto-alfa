@@ -41,28 +41,34 @@
 - [x] `apps/web` creado (Next.js 16, TypeScript, Tailwind, App Router). Corre con `npm run dev` en `http://localhost:3000`.
 - [x] `backend/` y `frontend/` (legacy, vacíos) eliminados — la migración a `apps/` que estaba pendiente en el README ya se hizo directamente, sin paso intermedio.
 - [x] **Semana 1 — Cimientos: completa.** Modelo de datos núcleo con `tenant_id` (`tenants`, `categorias`, `productos`, `clientes`, `pedidos`, `detalle_pedidos`, más `tenant_id` en `users`), estructura modular real (`app/Modules/Catalogo`, `app/Modules/Pedidos`, `app/Shared`) siguiendo `docs/architecture/arquitectura-backend.md`. Scoping automático por tenant (`TenantScope` + trait `BelongsToTenant`) **probado end-to-end**: un segundo tenant de prueba solo veía su propio producto, nunca los del piloto — ver detalle en Referencias. Autenticación con Sanctum (`POST /api/v1/login`, `/me`, `/logout`) funcionando. Sembrado el piloto real: tenant "Skincare Piloto", usuario `admin@skincarepiloto.test` / `password`, 3 categorías y 5 productos de skincare de ejemplo.
-- [ ] Semana 2 — Tienda: catálogo público, carrito, checkout con pago simulado (pedido queda "pendiente de confirmación", el admin lo confirma a mano — sin pasarela de pago real). Falta también que `apps/web` consuma la API real en vez de la página default de Next.js.
+- [x] **Semana 2 — Tienda: completa (pendiente de que el usuario la pruebe en el navegador — ver nota abajo).** Rutas públicas sin login (`/api/v1/tienda/productos`, `/tienda/productos/{slug}`, `/tienda/pedidos`) resueltas contra un tenant fijo por configuración (`ResolvePublicTenant`, ver Notas técnicas). `apps/web` ya no muestra la página default de Next.js: inicio con catálogo real, detalle de producto, carrito (estado en `localStorage`, `CarritoContext`), checkout que crea el pedido en `pendiente_pago` sin pasarela de pago real. Validación de stock en el checkout devuelve `STOCK_INSUFICIENTE` con el formato de error estándar del proyecto.
 - [ ] Semana 3 — Panel: CRUD de productos, gestión de pedidos, descuento de stock al confirmar un pedido.
 - [ ] Semana 4 — Confiabilidad: cargar el catálogo real de skincare (falta definir con el negocio), pruebas end-to-end del flujo completo, corregir lo que rompa.
 
 ## Próximo paso concreto
 
-Empezar la Semana 2: `apps/web` debe dejar de mostrar la página default de Next.js y consumir `apps/api` de verdad — catálogo público (lista + detalle de producto) primero, luego carrito y checkout con pago simulado.
+**Falta que el usuario pruebe el flujo completo en su navegador real** (agregar al carrito, ajustar cantidades, completar el checkout) — lo que se pudo probar desde la sesión de trabajo fue todo lo que no requiere interacción de navegador: los endpoints de la API con `curl` (catálogo, checkout, error de stock insuficiente, aislamiento entre tenants) y el HTML que Next.js genera en el servidor (nombres/precios correctos, página 404 real). La parte interactiva (clicks, `localStorage`, formularios) no se pudo verificar de forma automática. Una vez confirmado que funciona a ojo, seguir con la Semana 3 (panel administrativo).
 
 ### Cómo levantar el entorno en una sesión nueva
 
 1. Laragon: solo necesitas que **MySQL** esté iniciado (no Apache).
-2. Redis: iniciarlo aparte como proceso independiente — `Start-Process -FilePath "C:\laragon\bin\redis\redis-x64-5.0.14.1\redis-server.exe" -WindowStyle Hidden` en PowerShell (no lo inicia Laragon solo, y si se lanza con `nohup` desde bash puede morir entre turnos de la sesión — `Start-Process` de PowerShell es lo que sobrevive).
+2. Redis: corre como **servicio de Windows** (`RedisProyectoAlfa`) — no depende de que Laragon ni ninguna terminal estén abiertos. Si por algo dejara de estar activo: `Start-Service RedisProyectoAlfa` en PowerShell.
 3. API: `cd apps/api && php artisan serve --port=8000`
 4. Web: `cd apps/web && npm run dev -- --port 3000`
 5. La versión activa de PHP debe ser la 8.3.32 (`C:\laragon\bin\php\php-8.3.32-Win32-vs16-x64`), no la 8.1.10 vieja.
-6. Login de prueba: `POST /api/v1/login` con `{"email":"admin@skincarepiloto.test","password":"password"}`.
+6. Login de prueba (panel, Semana 3): `POST /api/v1/login` con `{"email":"admin@skincarepiloto.test","password":"password"}`.
+7. Tienda pública: abrir `http://localhost:3000` directamente, sin login.
+
+**Nota sobre procesos en segundo plano:** lanzar `php artisan serve` o `npm run dev` con `nohup ... &` desde bash no sobrevive entre turnos de una sesión de Claude Code — hay que lanzarlos con `Start-Process` de PowerShell (o dejarlos corriendo en una terminal propia del usuario) para que no se caigan solos.
 
 ### Notas técnicas para la próxima sesión
 
 - Laravel 13 usa atributos PHP (`#[Fillable([...])]`, `#[Hidden([...])]`) en vez de las propiedades `$fillable`/`$hidden` — revisar `app/Models/User.php` como referencia antes de escribir un modelo nuevo, no asumir la sintaxis clásica.
 - `tenant_id` es **intencionalmente no-fillable** en los modelos de negocio (Producto, Categoria, etc.): se asigna solo automáticamente vía `BelongsToTenant` cuando hay un `currentTenantId` resuelto (middleware `resolve-tenant`), nunca desde el cuerpo de una petición. `firstOrCreate`/`updateOrCreate` sí lo aceptan porque usan `forceFill` internamente — es la excepción esperada, no un bug.
 - `apps/web` trae su propio `apps/web/CLAUDE.md` (apunta a `apps/web/AGENTS.md`): advierte que Next.js 16 tiene cambios que rompen con versiones anteriores — revisar `node_modules/next/dist/docs/` antes de escribir código de Next.js nuevo, no asumir patrones de versiones anteriores.
+- **`ModelNotFoundException` no llega como tal a `bootstrap/app.php`**: Laravel la convierte a `Symfony\Component\HttpKernel\Exception\NotFoundHttpException` antes de pasar por los `render()` personalizados — hay que capturar `NotFoundHttpException`, no `ModelNotFoundException`, para que el 404 salga con el formato de error del proyecto.
+- **La tienda pública resuelve el tenant contra un slug fijo** (`config('tenant.slug_publico_por_defecto')`, hoy `skincare-piloto`, ver `App\Shared\Http\Middleware\ResolvePublicTenant`) porque solo existe un tenant. El día que haya más de uno sirviendo tienda pública, esto se reemplaza por resolución real por dominio — es el único punto que hay que tocar.
+- **Redis corre como servicio de Windows** (`RedisProyectoAlfa`), no como proceso suelto — se instaló así porque los procesos lanzados con `nohup` (bash) o incluso `Start-Process` sin ser servicio se caían entre turnos de la sesión. `php artisan serve` y `npm run dev` sí se relanzan con `Start-Process` de PowerShell cuando hace falta (más simples, se reinician rápido), no valía la pena convertirlos en servicio.
 
 ## Decisiones pendientes que no son técnicas
 
