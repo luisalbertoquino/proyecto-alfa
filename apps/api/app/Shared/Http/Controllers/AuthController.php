@@ -5,7 +5,6 @@ namespace App\Shared\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -35,12 +34,7 @@ class AuthController
         return response()->json([
             'data' => [
                 'token' => $token,
-                'usuario' => [
-                    'id' => $user->id,
-                    'nombre' => $user->name,
-                    'email' => $user->email,
-                    'tenant_id' => $user->tenant_id,
-                ],
+                'usuario' => $this->formatearUsuario($user),
             ],
         ]);
     }
@@ -54,18 +48,23 @@ class AuthController
 
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user();
+        return response()->json(['data' => $this->formatearUsuario($request->user())]);
+    }
 
-        return response()->json([
-            'data' => [
-                'id' => $user->id,
-                'nombre' => $user->name,
-                'email' => $user->email,
-                'tenant' => [
-                    'id' => $user->tenant->id,
-                    'nombre' => $user->tenant->nombre,
-                ],
+    /**
+     * Misma forma en /login y /me — evita que el panel tenga que manejar
+     * dos representaciones distintas del mismo usuario.
+     */
+    private function formatearUsuario(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'nombre' => $user->name,
+            'email' => $user->email,
+            'tenant' => [
+                'id' => $user->tenant->id,
+                'nombre' => $user->tenant->nombre,
             ],
-        ]);
+        ];
     }
 }

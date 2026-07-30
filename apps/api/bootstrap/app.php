@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Pedidos\Exceptions\EstadoPedidoInvalidoException;
 use App\Modules\Pedidos\Exceptions\StockInsuficienteException;
 use App\Shared\Http\Middleware\ResolvePublicTenant;
 use App\Shared\Http\Middleware\ResolveTenant;
@@ -45,6 +46,11 @@ return Application::configure(basePath: dirname(__DIR__))
                     'mensaje' => $e->getMessage(),
                     'detalles' => ['producto_id' => $e->productoId, 'disponible' => $e->disponible],
                 ]], 422),
+                $e instanceof EstadoPedidoInvalidoException => response()->json(['error' => [
+                    'codigo' => 'ESTADO_INVALIDO',
+                    'mensaje' => $e->getMessage(),
+                    'detalles' => ['pedido_id' => $e->pedidoId, 'estado_actual' => $e->estadoActual],
+                ]], 409),
                 $e instanceof ValidationException => response()->json(['error' => [
                     'codigo' => 'VALIDACION',
                     'mensaje' => 'Los datos enviados no son válidos.',
