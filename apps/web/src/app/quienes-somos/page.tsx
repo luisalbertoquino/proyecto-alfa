@@ -2,6 +2,7 @@ import { apiFetch } from "@/lib/api";
 import type { Negocio } from "@/types/tienda";
 
 export const metadata = { title: "Quiénes somos — Skincare Piloto" };
+export const dynamic = "force-dynamic";
 
 export default async function QuienesSomosPage() {
   const negocio = await apiFetch<Negocio>("/tienda/negocio");

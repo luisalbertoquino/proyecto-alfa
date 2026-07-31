@@ -4,6 +4,7 @@ import { formatearPrecio } from "@/lib/formato";
 import type { Rutina } from "@/types/tienda";
 
 export const metadata = { title: "Rutinas sugeridas — Skincare Piloto" };
+export const dynamic = "force-dynamic";
 
 export default async function RutinasPage() {
   const rutinas = await apiFetch<Rutina[]>("/tienda/rutinas");

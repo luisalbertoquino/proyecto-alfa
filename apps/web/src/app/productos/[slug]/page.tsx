@@ -5,6 +5,8 @@ import { AgregarAlCarrito } from "@/components/AgregarAlCarrito";
 import { GaleriaProducto } from "@/components/GaleriaProducto";
 import type { Producto } from "@/types/tienda";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductoPage({
   params,
 }: {

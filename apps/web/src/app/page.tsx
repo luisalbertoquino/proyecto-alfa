@@ -3,6 +3,11 @@ import { apiFetch } from "@/lib/api";
 import { ProductCard } from "@/components/ProductCard";
 import type { Necesidad, Producto } from "@/types/tienda";
 
+// Catálogo real (stock, precios) — se renderiza en cada visita, nunca se
+// congela en el build. Evita además que el build dependa de tener la API
+// alcanzable en el momento de compilar (ver docs/estado-actual.md, despliegue).
+export const dynamic = "force-dynamic";
+
 export default async function Home({
   searchParams,
 }: {

@@ -2,6 +2,7 @@ import { apiFetch } from "@/lib/api";
 import type { Negocio } from "@/types/tienda";
 
 export const metadata = { title: "Contáctanos — Skincare Piloto" };
+export const dynamic = "force-dynamic";
 
 export default async function ContactanosPage() {
   const negocio = await apiFetch<Negocio>("/tienda/negocio");
