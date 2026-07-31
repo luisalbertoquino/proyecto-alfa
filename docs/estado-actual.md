@@ -2,7 +2,7 @@
 
 > Este documento se actualiza en cada sesión de trabajo relevante. No es un historial completo — para eso está el historial de git y el `## Historial` de cada documento formal. Aquí solo vive **el presente**: en qué fase estamos y qué sigue.
 
-**Última actualización:** 2026-07-27
+**Última actualización:** 2026-07-31
 
 ---
 
@@ -59,14 +59,20 @@
     - **Rutinas sugeridas** (3/5/10 pasos): antes quedaron fuera porque "necesitan que Angie decida qué va en cada una" — con la misma instrucción de inventar y ajustar después, se creó el modelo (`Rutina`, muchos-a-muchos ordenado con `Producto` vía `rutina_producto.orden`) y se sembraron 3 rutinas de ejemplo usando el catálogo ya existente. Página `/rutinas` en la tienda (pasos numerados, enlazan al producto, precio total de la rutina); CRUD completo en el panel con un selector de productos que preserva el orden de selección y permite reordenar con flechas ↑/↓.
     - **Sigue fuera a propósito** (esto sí es una limitación de arquitectura, no de datos faltantes): club de fidelización, quiz de tipo de piel + blog, comparador antes/después — las tres requieren cuentas de cliente con login en la tienda pública, que hoy no existen (el checkout es de invitado). Construirlas de verdad implica agregar autenticación de clientes primero, no es un ajuste de una sesión — queda para después del piloto (Fase 4/5).
     - Confirma que el modelo de negocio real es reventa curada de K-beauty en Colombia — coincide con el catálogo de ejemplo ya cargado la sesión anterior.
+- [x] **El prototipo ya está desplegado de verdad, no solo local.** Droplet de pruebas del usuario (`InviteArt`, ya tenía otros proyectos corriendo — Predictor, emcosalud, trendhub, etc.), con OpenLiteSpeed + MariaDB + Redis + PM2 ya instalados de antes. URLs reales, con HTTPS:
+  - Tienda: **https://skincare.alegrarte.store**
+  - Panel: **https://skincare-admin.alegrarte.store** (mismo login: `admin@skincarepiloto.test` / `password`)
+  - API: **https://skincare-api.alegrarte.store**
+  Ver "Cómo desplegar cambios nuevos" y "Notas técnicas del despliegue" más abajo para el detalle de cómo quedó armado y los tropiezos reales que hubo (varios, todos resueltos).
 
 ## Próximo paso concreto
 
-Dos cosas en paralelo, ninguna depende de la otra:
-1. **Dato de negocio pendiente (no técnico):** catálogo real de la tienda de skincare (nombres, precios, fotos si hay) para reemplazar los 5 productos de ejemplo — solo el usuario/Angie lo tienen.
-2. **El usuario prueba en su navegador real** el flujo interactivo completo (carrito y checkout en `apps/web`; login, productos y pedidos en `apps/admin`) — todo lo que se pudo probar sin navegador ya está verificado con `curl`.
+Con el prototipo ya desplegado y accesible por URL real, lo único que falta para cerrar el sprint de 30 días es un dato de negocio, no algo técnico:
 
-Con el catálogo real cargado y el navegador confirmado, la Semana 4 (y el sprint de 30 días) queda cerrada.
+1. **Catálogo real de la tienda de skincare** (nombres, precios, fotos) para reemplazar el catálogo de ejemplo — solo el usuario/Angie lo tienen. Las fotos se suben desde el panel (`/productos/{id}/editar`, campo de archivo + galería opcional).
+2. **Probar el flujo completo en el navegador real**, ya sobre la URL pública — agregar al carrito y pagar en la tienda, y en el panel confirmar ese pedido y ver que el stock baje.
+
+Con eso, la Semana 4 (y el sprint de 30 días) queda cerrada.
 
 ### Cómo levantar el entorno en una sesión nueva
 
@@ -94,6 +100,35 @@ Con el catálogo real cargado y el navegador confirmado, la Semana 4 (y el sprin
 - **`apps/admin` es CSR** (Client-Side Rendering): todas las páginas del panel son Client Components (`"use client"`) que piden los datos ellas mismas con `useEffect` + `apiFetch`, porque el token de sesión vive en `localStorage` del navegador y un Server Component de Next.js no tiene acceso a eso. `apps/web` (la tienda) es distinto: ahí sí se usa Server Components para el catálogo, porque no depende de sesión — ver `docs/architecture/arquitectura-frontend.md`.
 - **Eloquent pluraliza en inglés, no en español** — con nombres de modelo irregulares en español se equivoca y hay que fijar `protected $table` a mano. Ya pasó dos veces: `Necesidad` → Eloquent buscaba `necesidads` (tabla real: `necesidades`), `ImagenProducto` → Eloquent buscaba `imagen_productos` (tabla real: `producto_imagenes`). Mismo problema aplica a `constrained()` en migraciones cuando el nombre de la FK no coincide con el plural que Eloquent adivina — hay que pasarle el nombre de tabla explícito: `constrained('necesidades')`. Antes de crear un modelo nuevo con nombre en español que no sea un plural regular (`-s` simple), revisar si hace falta fijar `$table` a mano.
 - **El `curl` de Windows (el que trae Git Bash) no puede subir arrays de archivos** (`-F "campo[]=@archivo"`) — falla con `curl: (26) Failed to open/read local data from file/application` por cómo maneja los corchetes, con o sin `-g`/`--globoff`. Para probar endpoints que reciben `imagenes[]` (o cualquier campo tipo array con archivos), usar Python (`requests`, ya disponible) en vez de `curl -F`. Ojo también: en este entorno, el `/tmp` de Git Bash y el `python3` del sistema NO apuntan a la misma carpeta (`/tmp` de bash = `C:\Users\<usuario>\AppData\Local\Temp`; hay que usar la ruta Windows completa al pasarle un archivo a Python).
+
+### Cómo desplegar cambios nuevos al droplet
+
+Manual a propósito, no hay webhook todavía:
+
+```bash
+ssh root@104.248.51.210
+cd /var/www/skincare
+bash scripts/deploy.sh
+```
+
+El script hace `git pull`, reinstala dependencias, migra, reconstruye `apps/web` y `apps/admin`, y reinicia los procesos de PM2. **No corre el seeder** (borraría/duplicaría datos reales cargados desde el panel). Ver `scripts/deploy.sh` para el detalle exacto.
+
+### Notas técnicas del despliegue (droplet de pruebas)
+
+Server compartido con otros proyectos del usuario — RAM muy ajustada (~1GB total) y disco al 86%. Todo lo de abajo salió de tropiezos reales durante el primer despliegue, no de teoría:
+
+- **El puerto "obvio" casi nunca está libre en un server compartido.** `emcosalud` (otro proyecto del usuario) ya usaba el puerto 3000. Antes de asumir un puerto libre, revisar con `ss -ltnp | grep LISTEN`. Terminamos en 3001 (`skincare-web`) y 3002 (`skincare-admin`).
+- **`pm2 start npm -- start -- --port 3000` es frágil** (dos capas de paso de argumentos, npm → next). Mejor invocar el binario de Next directo: `pm2 start node_modules/.bin/next --name X -- start -p PUERTO`.
+- **LiteSpeed corre PHP como `www-data` (UID 33), no como `root`**, aunque el vhost tenga "External App Set UID Mode: DocRoot UID" — en la práctica el `lsphp` compartido corre con un usuario fijo. `storage/` y `bootstrap/cache/` deben ser escribibles por ese usuario o Laravel truena con 500 sin poder ni loguear el error (el log falla al intentar escribir). Arreglo: `chown -R root:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache`. El script de despliegue ya lo hace en cada corrida.
+- **Diagnóstico de un 500 en producción (`APP_DEBUG=false`) sin ver nada en el navegador:** vaciar `storage/logs/laravel.log`, hacer una sola petición, y leer el archivo limpio (`> storage/logs/laravel.log && curl ... && cat storage/logs/laravel.log`) — así no te confunden líneas viejas de una petición anterior. Si el log queda **vacío** después de un 500, el error nunca llegó a Laravel (falla antes, a nivel de PHP/servidor) — probar con un `<?php phpinfo(); ?>` suelto para aislar si el problema es de PHP o específico de Laravel.
+- **En un Virtual Host de LiteSpeed, el campo "Document Root" (pestaña General) no puede quedar en "Not Set", ni siquiera en un vhost que es 100% proxy reverso** (no sirve ningún archivo estático) — dejarlo vacío hace que el vhost nunca termine de activarse: LiteSpeed responde 404 sin loguear ningún error, como si el dominio no existiera. Este fue el bloqueo más largo de depurar porque el `Context` de tipo Proxy y el mapeo de dominio estaban perfectos — el síntoma no apuntaba para nada a "Document Root".
+- **El mapeo dominio → vhost vive en el Listener** (`Virtual Host Mappings`), compartido por todos los vhosts que usan ese puerto — no es una propiedad del vhost en sí. Un vhost nuevo necesita que ALGUIEN agregue su dominio ahí explícitamente (tanto en el listener HTTP como en el HTTPS).
+- **El reinicio "suave" de LiteSpeed (`lswsctrl restart`, manda `SIGUSR1`) a veces no recarga cambios de vhosts/listeners nuevos.** Si algo no aparece después de eso, probar con un ciclo completo: `lswsctrl stop && lswsctrl start` (corta un par de segundos TODOS los sitios del servidor, no solo el nuestro — aceptable en un servidor de pruebas, avisar si alguna vez se hace en uno real).
+- **SSL: certbot en modo `standalone`** (el método que el usuario ya usaba en este servidor para sus otros proyectos) — necesita el puerto 80 libre, así que hay que parar LiteSpeed mientras corre. Un solo certificado cubrió los 3 subdominios a la vez (`certbot certonly --standalone -d dominio1 -d dominio2 -d dominio3`). Certbot configuró renovación automática solo, pero **el renovado no reinicia LiteSpeed por sí solo** — como decisión futura, agregar un deploy-hook de certbot que corra `lswsctrl restart` para que el certificado renovado se recargue solo cada ~90 días.
+- **`apps/web` (Next.js) intenta pre-renderizar en build time por defecto.** Las páginas que hacen `await apiFetch(...)` a nivel de Server Component (home, detalle de producto, rutinas, quiénes somos, contáctanos) necesitan `export const dynamic = "force-dynamic"` — si no, Next.js intenta generarlas como HTML estático durante `npm run build`, lo que exige que la API esté alcanzable **en ese momento** (antes de que exista DNS/LiteSpeed para ella) y además serviría datos de catálogo congelados en vez de stock/precios reales. Ya aplicado en todas las páginas de datos.
+- **`npm ci` falló en el droplet** ("lock file's picomatch@2.3.2 does not satisfy picomatch@4.0.5") por diferencias de resolución de dependencias entre Windows (donde se generó el lockfile) y Linux — se usó `npm install` en su lugar, más tolerante.
+- **RAM ajustada:** builds de Next.js con `NODE_OPTIONS="--max-old-space-size=512"` para no acaparar memoria; hay 2GB de swap ya configurado en el servidor que absorbe los picos.
+- **Redimensionar el droplet (más RAM/disco) desde el panel de DigitalOcean exige un reinicio** — la sesión SSH se corta sola, es normal. `pm2 startup` ya estaba configurado de antes en este servidor, así que los procesos de PM2 (incluidos los nuevos, después de un `pm2 save`) vuelven solos tras el reinicio; si un servidor nuevo NO tiene `pm2 startup` configurado, hay que correrlo una vez (genera un servicio systemd) además de `pm2 save`.
 
 ## Decisiones pendientes que no son técnicas
 
