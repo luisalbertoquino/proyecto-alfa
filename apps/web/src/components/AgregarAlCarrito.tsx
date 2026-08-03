@@ -34,7 +34,7 @@ export function AgregarAlCarrito({ producto }: { producto: Producto }) {
           agregar(producto, cantidad);
           setAgregado(true);
         }}
-        className="rounded-full bg-neutral-900 px-5 py-2 text-sm text-white"
+        className="rounded-full bg-brand px-5 py-2 text-sm text-white"
       >
         Agregar al carrito
       </button>

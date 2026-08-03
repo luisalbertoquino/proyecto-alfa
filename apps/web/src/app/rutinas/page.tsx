@@ -43,7 +43,7 @@ export default async function RutinasPage() {
                       href={`/productos/${producto.slug}`}
                       className="flex items-center gap-3 rounded-lg border border-neutral-200 p-3 hover:border-neutral-400"
                     >
-                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs text-white">
+                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand text-xs text-white">
                         {i + 1}
                       </span>
                       {producto.imagen_url && (

@@ -33,7 +33,7 @@ export function GaleriaProducto({
               type="button"
               onClick={() => setActiva(url)}
               className={`h-16 w-16 overflow-hidden rounded border ${
-                url === activa ? "border-neutral-900" : "border-neutral-200"
+                url === activa ? "border-brand" : "border-neutral-200"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- miniatura de la galería */}

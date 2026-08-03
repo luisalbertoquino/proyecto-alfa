@@ -37,6 +37,8 @@ export type Negocio = {
   contacto_whatsapp: string | null;
   contacto_email: string | null;
   contacto_horario: string | null;
+  color_primario: string | null;
+  tipografia: "sans" | "serif" | null;
 };
 
 export type ProductoEnRutina = Producto & { pivot: { orden: number } };

@@ -128,7 +128,7 @@ export default function CheckoutPage() {
         <button
           type="submit"
           disabled={enviando}
-          className="w-full rounded-full bg-neutral-900 px-5 py-3 text-white disabled:opacity-50"
+          className="w-full rounded-full bg-brand px-5 py-3 text-white disabled:opacity-50"
         >
           {enviando ? "Enviando..." : "Confirmar pedido"}
         </button>

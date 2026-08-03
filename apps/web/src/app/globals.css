@@ -3,13 +3,24 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Fallback si por algo no se resolviera el tenant — layout.tsx siempre
+     sobreescribe esto con el color real del negocio. Nunca se sirve una
+     pantalla sin esta variable resuelta (docs/design/design-system.md). */
+  --color-brand-primario: #171717;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand: var(--color-brand-primario);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/* Theming reducido por tenant (color_primario / tipografia en Tenant) —
+   ver apps/web/src/app/layout.tsx y docs/design/design-system.md. */
+.font-serif-tema {
+  font-family: Georgia, "Times New Roman", serif;
 }
 
 @media (prefers-color-scheme: dark) {

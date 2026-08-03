@@ -7,7 +7,7 @@
  */
 export function BarraEnvioGratis() {
   return (
-    <div className="bg-neutral-900 py-2 text-center text-xs text-white">
+    <div className="bg-brand py-2 text-center text-xs text-white">
       Envíos gratis por compras superiores a $150.000
     </div>
   );

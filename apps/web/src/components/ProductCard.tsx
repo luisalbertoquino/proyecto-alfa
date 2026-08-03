@@ -53,7 +53,7 @@ export function ProductCard({ producto }: { producto: Producto }) {
         ) : (
           <button
             onClick={agregarRapido}
-            className="w-full rounded-full bg-neutral-900 px-4 py-2 text-sm text-white transition hover:bg-neutral-800"
+            className="w-full rounded-full bg-brand px-4 py-2 text-sm text-white transition hover:bg-brand/90"
           >
             {agregado ? "Agregado ✓" : "Agregar al carrito"}
           </button>

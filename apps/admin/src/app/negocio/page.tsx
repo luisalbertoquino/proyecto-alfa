@@ -19,6 +19,8 @@ function FormularioNegocio() {
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
   const [horario, setHorario] = useState("");
+  const [colorPrimario, setColorPrimario] = useState("#171717");
+  const [tipografia, setTipografia] = useState<"sans" | "serif">("sans");
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +32,8 @@ function FormularioNegocio() {
       setWhatsapp(n.contacto_whatsapp ?? "");
       setEmail(n.contacto_email ?? "");
       setHorario(n.contacto_horario ?? "");
+      setColorPrimario(n.color_primario ?? "#171717");
+      setTipografia(n.tipografia ?? "sans");
     });
   }, []);
 
@@ -46,6 +50,8 @@ function FormularioNegocio() {
           contacto_whatsapp: whatsapp,
           contacto_email: email,
           contacto_horario: horario,
+          color_primario: colorPrimario,
+          tipografia: tipografia,
         }),
       });
       setGuardado(true);
@@ -109,6 +115,38 @@ function FormularioNegocio() {
             className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
           />
         </div>
+
+        <fieldset className="rounded border border-neutral-200 p-4">
+          <legend className="px-1 text-sm font-medium">Apariencia de la tienda</legend>
+
+          <div className="mt-2">
+            <label className="block text-sm font-medium">Color de marca</label>
+            <div className="mt-1 flex items-center gap-3">
+              <input
+                type="color"
+                value={colorPrimario}
+                onChange={(e) => setColorPrimario(e.target.value)}
+                className="h-10 w-16 rounded border border-neutral-300"
+              />
+              <span className="text-sm text-neutral-600">{colorPrimario}</span>
+            </div>
+            <p className="mt-1 text-xs text-neutral-500">
+              Se usa en los botones y acentos de la tienda pública.
+            </p>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium">Tipografía</label>
+            <select
+              value={tipografia}
+              onChange={(e) => setTipografia(e.target.value as "sans" | "serif")}
+              className="mt-1 w-full max-w-xs rounded border border-neutral-300 px-3 py-2"
+            >
+              <option value="sans">Sans (moderna, la actual)</option>
+              <option value="serif">Serif (más cálida/artesanal)</option>
+            </select>
+          </div>
+        </fieldset>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
         {guardado && <p className="text-sm text-green-700">Guardado.</p>}

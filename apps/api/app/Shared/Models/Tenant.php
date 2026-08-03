@@ -23,6 +23,8 @@ class Tenant extends Model
         'nombre',
         'slug',
         'dominio_api',
+        'color_primario',
+        'tipografia',
         'quienes_somos',
         'contacto_whatsapp',
         'contacto_email',

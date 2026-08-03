@@ -61,7 +61,7 @@ export default function CarritoPage() {
 
       <Link
         href="/checkout"
-        className="mt-6 block rounded-full bg-neutral-900 px-5 py-3 text-center text-white"
+        className="mt-6 block rounded-full bg-brand px-5 py-3 text-center text-white"
       >
         Continuar con el pedido
       </Link>
