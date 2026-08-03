@@ -65,25 +65,14 @@
   - API: **https://skincare-api.alegrarte.store**
   Ver "Cómo desplegar cambios nuevos" y "Notas técnicas del despliegue" más abajo para el detalle de cómo quedó armado y los tropiezos reales que hubo (varios, todos resueltos).
 - [x] **Suite de pruebas automatizadas real** (antes todo el aislamiento multi-tenant y los flujos críticos se verificaban a mano con `curl`/tinker, sin nada que impidiera una regresión futura). `phpunit.xml` reconfigurado para correr contra MySQL real (`proyecto_alfa_test`, no sqlite — ni está instalada la extensión ni tendría sentido validar contra un motor distinto al real, ver ADR-002) y para escanear tests colocados junto a cada módulo (`app/Modules/*/Tests`, `app/Shared/Tests`), siguiendo la convención ya escrita en `docs/development/testing.md`. Trait compartido `tests/Concerns/CreaNegocios.php` con helpers para crear tenants/usuarios/productos/pedidos de prueba. **14 tests, 53 aserciones, todos verdes**, cubriendo los 3 flujos críticos del documento: login y aislamiento multi-tenant (`AutenticacionYAislamientoTenantTest`), checkout con validación de stock (`CheckoutStockTest`), y confirmar/cancelar pedido con sincronización de inventario (`ConfirmarCancelarPedidoTest`) — este último incluye la aserción negativa de que un tenant no puede confirmar, cancelar ni ver pedidos de otro tenant, y que confirmar el pedido de un tenant nunca toca el stock de un producto homónimo de otro tenant.
-- [x] **Script de respaldo automático** (`scripts/respaldo.sh`) para el droplet de pruebas: hace `mysqldump` comprimido de la base de datos y `tar.gz` de las fotos de producto subidas, guardándolos fuera del repo (`/var/backups/skincare`, así un `git pull` nunca los toca) y con rotación de 7 días (el disco del droplet ya está al ~86%, dejar crecer los respaldos sin límite lo llenaría). Las credenciales se leen del `.env` real de la app, nunca quedan hardcodeadas en el script. **Falta instalar el cron en el droplet y probarlo de verdad** (paso siguiente, requiere SSH del usuario — ver "Próximo paso concreto").
+- [x] **Script de respaldo automático instalado y verificado en el droplet real** (`scripts/respaldo.sh`): hace `mysqldump` comprimido de la base de datos (`skincare_piloto` en el droplet; el nombre se lee del `.env` real de la app, nunca queda hardcodeado, por eso funcionó sin ajustes aunque el nombre de la BD en el droplet es distinto al de `proyecto_alfa` en local) y `tar.gz` de las fotos de producto subidas, guardándolos fuera del repo (`/var/backups/skincare`, así un `git pull` nunca los toca) con rotación de 7 días. Cron instalado (`0 3 * * *`, diario) y **confirmado que dispara solo**: se probó primero con un cron temporal cada minuto, se vio en `respaldo.log` una corrida automática real (`12:31:01`) distinta de la corrida manual (`12:30:30`), y ya se reemplazó por la línea definitiva diaria. Aún no hay copia fuera del droplet (ver nota de "Pendiente a futuro" abajo).
 
 ## Próximo paso concreto
 
-1. **Instalar el cron del respaldo en el droplet y probarlo de verdad** (lo único técnico que falta de esta sesión — el script `scripts/respaldo.sh` ya está escrito, probado el diseño, pero no ejecutado en el servidor real). Por SSH:
-   ```bash
-   ssh root@104.248.51.210
-   cd /var/www/skincare && git pull
-   mkdir -p /var/backups/skincare/db /var/backups/skincare/fotos
-   bash scripts/respaldo.sh              # correrlo una vez a mano primero
-   cat /var/backups/skincare/respaldo.log   # confirmar que dice "terminado" sin ERROR
-   ls -lh /var/backups/skincare/db /var/backups/skincare/fotos   # confirmar que el .sql.gz existe y no está vacío
-   crontab -e
-   # agregar esta línea (respaldo diario a las 3am hora del servidor):
-   0 3 * * * /bin/bash /var/www/skincare/scripts/respaldo.sh
-   ```
-   Después de instalar el cron, esperar al día siguiente (o forzar la hora del sistema/ajustar temporalmente la línea de cron a "dentro de 2 minutos" para probarlo sin esperar) y confirmar en `respaldo.log` que corrió solo.
-2. **Catálogo real de la tienda de skincare** (nombres, precios, fotos) para reemplazar el catálogo de ejemplo — solo el usuario/Angie lo tienen. Las fotos se suben desde el panel (`/productos/{id}/editar`, campo de archivo + galería opcional).
-3. **Probar el flujo completo en el navegador real**, ya sobre la URL pública — agregar al carrito y pagar en la tienda, y en el panel confirmar ese pedido y ver que el stock baje.
+Con tests automatizados y respaldos ya funcionando de verdad en el droplet, lo único que falta para cerrar el sprint de 30 días es un dato de negocio, no algo técnico:
+
+1. **Catálogo real de la tienda de skincare** (nombres, precios, fotos) para reemplazar el catálogo de ejemplo — solo el usuario/Angie lo tienen. Las fotos se suben desde el panel (`/productos/{id}/editar`, campo de archivo + galería opcional).
+2. **Probar el flujo completo en el navegador real**, ya sobre la URL pública — agregar al carrito y pagar en la tienda, y en el panel confirmar ese pedido y ver que el stock baje.
 
 Con eso, la Semana 4 (y el sprint de 30 días) queda cerrada.
 
@@ -128,10 +117,10 @@ El script hace `git pull`, reinstala dependencias, migra, reconstruye `apps/web`
 
 ### Respaldos automáticos (droplet de pruebas)
 
-`scripts/respaldo.sh` — corre por cron una vez al día (instalación manual, ver "Próximo paso concreto"), hace `mysqldump` comprimido de `proyecto_alfa` y `tar.gz` de `storage/app/public/productos`, los guarda en `/var/backups/skincare` (fuera del repo, así `git pull` nunca los borra) con rotación de 7 días. Las credenciales de la BD se leen del `.env` real de la app en cada corrida, no están escritas en el script. Para restaurar un respaldo:
+`scripts/respaldo.sh` — instalado en cron (`0 3 * * *`, diario, hora del servidor) y **confirmado corriendo solo** (ver bullet en "Hecho hasta ahora"). Hace `mysqldump` comprimido de la base de datos (`skincare_piloto` en el droplet — el nombre real se lee del `.env` de la app, no está hardcodeado) y `tar.gz` de `storage/app/public/productos`, los guarda en `/var/backups/skincare` (fuera del repo, así `git pull` nunca los borra) con rotación de 7 días. Para restaurar un respaldo:
 
 ```bash
-gunzip -c /var/backups/skincare/db/proyecto_alfa_AAAAMMDD_HHMMSS.sql.gz | mysql -u root -p proyecto_alfa
+gunzip -c /var/backups/skincare/db/skincare_piloto_AAAAMMDD_HHMMSS.sql.gz | mysql -u root -p skincare_piloto
 tar -xzf /var/backups/skincare/fotos/productos_AAAAMMDD_HHMMSS.tar.gz -C /var/www/skincare/apps/api/storage/app/public/productos
 ```
 
@@ -139,7 +128,7 @@ Pendiente a futuro (fuera de alcance del prototipo de 30 días, anotado para no 
 
 ### Notas técnicas del despliegue (droplet de pruebas)
 
-Server compartido con otros proyectos del usuario — RAM muy ajustada (~1GB total) y disco al 86%. Todo lo de abajo salió de tropiezos reales durante el primer despliegue, no de teoría:
+Server compartido con otros proyectos del usuario — RAM muy ajustada (~2GB total) y disco al ~45% de uso (confirmado en sesión del 2026-08-03; una nota anterior en este documento decía 86%, estaba desactualizada). Todo lo de abajo salió de tropiezos reales durante el primer despliegue, no de teoría:
 
 - **El puerto "obvio" casi nunca está libre en un server compartido.** `emcosalud` (otro proyecto del usuario) ya usaba el puerto 3000. Antes de asumir un puerto libre, revisar con `ss -ltnp | grep LISTEN`. Terminamos en 3001 (`skincare-web`) y 3002 (`skincare-admin`).
 - **`pm2 start npm -- start -- --port 3000` es frágil** (dos capas de paso de argumentos, npm → next). Mejor invocar el binario de Next directo: `pm2 start node_modules/.bin/next --name X -- start -p PUERTO`.
