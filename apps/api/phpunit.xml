@@ -10,6 +10,10 @@
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <!-- Ver docs/development/testing.md: los tests de integración viven
+                 junto al módulo de dominio que prueban, no todos en tests/. -->
+            <directory>app/Modules/*/Tests</directory>
+            <directory>app/Shared/Tests</directory>
         </testsuite>
     </testsuites>
     <source>
@@ -23,8 +27,16 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!-- MySQL, no sqlite: es "la única fuente de verdad transaccional"
+             del proyecto (ADR-002) y este PHP ni siquiera tiene la extensión
+             pdo_sqlite instalada — probar contra un motor distinto al real
+             escondería diferencias de comportamiento (colación, JSON, FKs). -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_DATABASE" value="proyecto_alfa_test"/>
+        <env name="DB_USERNAME" value="root"/>
+        <env name="DB_PASSWORD" value=""/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
