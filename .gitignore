@@ -43,6 +43,7 @@ next-dev.log
 next-dev-err.log
 serve-out.log
 serve-err.log
+web-*.log
 
 # Build / test genéricos
 dist/
