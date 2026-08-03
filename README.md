@@ -50,7 +50,8 @@ El repositorio sigue un enfoque de **monorepo**, donde varias aplicaciones relac
 proyecto-alfa/
 ├── apps/
 │   ├── api/         # Laravel — API JSON, monolito modular por dominio
-│   └── web/         # Next.js — tienda pública (admin/ se agrega en la Semana 3)
+│   ├── web/         # Next.js — tienda pública
+│   └── admin/       # Next.js — panel administrativo
 ├── packages/        # código compartido entre apps (aún no creado)
 ├── docs/            # documentación de arquitectura, negocio, diseño, desarrollo, research, ADRs, RFCs
 ├── infrastructure/  # scripts de despliegue, configuración del servidor (OpenLiteSpeed, nativo por ahora)
@@ -59,7 +60,7 @@ proyecto-alfa/
 └── scripts/         # automatizaciones y utilidades de desarrollo
 ```
 
-El detalle completo vive en [`docs/architecture/vision-tecnica.md`](docs/architecture/vision-tecnica.md) (en construcción).
+El detalle completo vive en [`docs/architecture/vision-tecnica.md`](docs/architecture/vision-tecnica.md).
 
 ## Stack Tecnológico
 
@@ -70,8 +71,8 @@ El detalle completo vive en [`docs/architecture/vision-tecnica.md`](docs/archite
 | Base de datos | MySQL |
 | Cache / colas | Redis |
 | Despliegue | Nativo (sin contenedores) — droplet con OpenLiteSpeed en esta fase de prototipo; Docker queda como opción a evaluar en fases posteriores |
-| CDN / seguridad | Cloudflare |
-| CI/CD | GitHub Actions |
+| CDN / seguridad | *Sin implementar todavía* — Cloudflare estaba planeado, pero el prototipo desplegado usa SSL directo en el droplet (certbot/Let's Encrypt) y DNS gestionado directo en el proveedor de dominio. Se retoma si el tráfico real lo justifica. |
+| CI/CD | GitHub Actions (pipeline aún no configurado — el despliegue hoy es manual vía `scripts/deploy.sh`) |
 
 La justificación de cada elección se documentará en un stack tecnológico dedicado dentro de `docs/architecture/`. El cambio de PostgreSQL a MySQL y de Docker a despliegue nativo está documentado en [`docs/adr/ADR-002.md`](docs/adr/ADR-002.md).
 
@@ -87,13 +88,13 @@ La justificación de cada elección se documentará en un stack tecnológico ded
 4. **Fase 4 — Multicanal e inteligencia:** integraciones con marketplaces, dashboard de inteligencia comercial, publicidad digital.
 5. **Fase 5 — SaaS:** multi-tenant, licenciamiento/suscripciones, apertura a otros emprendedores.
 
-Detalle y fechas en [`docs/business/roadmap.md`](docs/business/roadmap.md) (en construcción).
+Detalle y fechas en [`docs/business/roadmap.md`](docs/business/roadmap.md).
 
 ## Estructura del Repositorio
 
 | Carpeta | Contenido |
 |---|---|
-| `apps/api`, `apps/web` | Código de la aplicación: API Laravel y tienda Next.js |
+| `apps/api`, `apps/web`, `apps/admin` | Código de la aplicación: API Laravel, tienda Next.js y panel administrativo Next.js |
 | `docs/` | Documentación: arquitectura, negocio, diseño, desarrollo, research, actas, ADRs, RFCs, estándares |
 | `database/` | Esquemas y migraciones |
 | `infrastructure/` | Scripts de despliegue y configuración del servidor (OpenLiteSpeed, nativo por ahora) |
@@ -102,11 +103,11 @@ Detalle y fechas en [`docs/business/roadmap.md`](docs/business/roadmap.md) (en c
 
 ## Cómo contribuir
 
-El proyecto está en fase de fundación con equipo reducido. Los estándares de ramas, commits y documentación se están definiendo en `docs/standards/` (pendiente de creación). Hasta que existan, cualquier cambio debe:
+Proyecto de equipo reducido (un desarrollador, una socia de marketing/diseño). Los estándares de nombres, commits, ramas, API y base de datos ya están definidos en [`docs/standards/`](docs/standards/) — sigue esos antes de improvisar un formato nuevo. Cualquier cambio significativo debe:
 
-1. Documentarse primero (qué problema resuelve, qué decisión toma).
-2. Pasar por una rama separada de `main`.
-3. Describirse en el PR con el porqué del cambio, no solo el qué.
+1. Documentarse primero (qué problema resuelve, qué decisión toma) siguiendo la plantilla de [`templates/nuevo-documento.md`](templates/nuevo-documento.md).
+2. Pasar por una rama separada de `main`, con el prefijo de [`docs/standards/branches.md`](docs/standards/branches.md).
+3. Describirse en el commit/PR con el porqué del cambio, no solo el qué — ver [`docs/standards/commits.md`](docs/standards/commits.md).
 
 ## Licencia
 
