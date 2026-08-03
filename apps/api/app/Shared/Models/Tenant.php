@@ -22,6 +22,7 @@ class Tenant extends Model
     protected $fillable = [
         'nombre',
         'slug',
+        'dominio_api',
         'quienes_somos',
         'contacto_whatsapp',
         'contacto_email',

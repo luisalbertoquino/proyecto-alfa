@@ -20,10 +20,11 @@ use Illuminate\Support\Str;
  */
 trait CreaNegocios
 {
-    protected function crearTenant(?string $nombre = null): Tenant
+    protected function crearTenant(?string $nombre = null, ?string $dominioApi = null): Tenant
     {
         return Tenant::factory()->create([
             'nombre' => $nombre ?? fake()->unique()->company(),
+            'dominio_api' => $dominioApi,
         ]);
     }
 

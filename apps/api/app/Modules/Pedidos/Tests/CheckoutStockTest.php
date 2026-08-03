@@ -10,12 +10,12 @@ use Tests\TestCase;
 /**
  * Flujo crítico "Checkout / creación de pedido" — ver docs/development/testing.md.
  *
- * La tienda pública hoy resuelve un solo tenant fijo por configuración
- * (App\Shared\Http\Middleware\ResolvePublicTenant, decisión ya documentada
- * — no es un bug de este test). Por eso este archivo no prueba aislamiento
- * multi-tenant sobre el endpoint público; esa aserción vive en
- * ConfirmarCancelarPedidoTest, sobre el panel administrativo, que sí es
- * multi-tenant de verdad.
+ * Este archivo no prueba aislamiento multi-tenant (usa un solo tenant, el
+ * que resuelve por defecto vía ResolvePublicTenant) porque no es lo que
+ * cubre — el aislamiento del panel administrativo vive en
+ * ConfirmarCancelarPedidoTest, y el aislamiento de la tienda pública por
+ * dominio (sin ningún login de por medio) vive en
+ * App\Shared\Tests\ResolucionPublicaPorDominioTest.
  */
 class CheckoutStockTest extends TestCase
 {
