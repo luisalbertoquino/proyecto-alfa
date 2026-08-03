@@ -49,16 +49,17 @@ El repositorio sigue un enfoque de **monorepo**, donde varias aplicaciones relac
 ```
 proyecto-alfa/
 ├── apps/
-│   ├── api/         # Laravel — API JSON, monolito modular por dominio
+│   ├── api/         # Laravel — API JSON, monolito modular por dominio (incluye sus propias database/ y storage/)
 │   ├── web/         # Next.js — tienda pública
 │   └── admin/       # Next.js — panel administrativo
 ├── packages/        # código compartido entre apps (aún no creado)
-├── docs/            # documentación de arquitectura, negocio, diseño, desarrollo, research, ADRs, RFCs
-├── infrastructure/  # scripts de despliegue, configuración del servidor (OpenLiteSpeed, nativo por ahora)
-├── database/        # esquemas, migraciones, seeders
-├── resources/        # logos, mockups, íconos, capturas
-└── scripts/         # automatizaciones y utilidades de desarrollo
+├── docs/            # documentación de arquitectura, negocio, diseño, desarrollo, research, ADRs, RFCs, actas
+├── resources/       # logos, mockups, íconos, capturas — hoy vacío, ver resources/README.md
+├── scripts/         # despliegue y respaldo del droplet (scripts/README.md)
+└── templates/       # plantillas para documentos nuevos de docs/
 ```
+
+Cada carpeta principal tiene su propio `README.md` con el detalle de qué va ahí (`apps/api/README.md`, `apps/web/README.md`, `apps/admin/README.md`, `resources/README.md`, `scripts/README.md`, `templates/README.md`).
 
 El detalle completo vive en [`docs/architecture/vision-tecnica.md`](docs/architecture/vision-tecnica.md).
 
@@ -94,12 +95,11 @@ Detalle y fechas en [`docs/business/roadmap.md`](docs/business/roadmap.md).
 
 | Carpeta | Contenido |
 |---|---|
-| `apps/api`, `apps/web`, `apps/admin` | Código de la aplicación: API Laravel, tienda Next.js y panel administrativo Next.js |
-| `docs/` | Documentación: arquitectura, negocio, diseño, desarrollo, research, actas, ADRs, RFCs, estándares |
-| `database/` | Esquemas y migraciones |
-| `infrastructure/` | Scripts de despliegue y configuración del servidor (OpenLiteSpeed, nativo por ahora) |
-| `resources/` | Logos, mockups, íconos, inspiración, capturas |
-| `scripts/` | Utilidades de desarrollo |
+| `apps/api`, `apps/web`, `apps/admin` | Código de la aplicación: API Laravel, tienda Next.js y panel administrativo Next.js. Esquemas/migraciones viven dentro de `apps/api/database/`, no en una carpeta `database/` separada. |
+| `docs/` | Documentación: arquitectura, negocio, diseño, desarrollo, research, actas (`docs/meetings/`), ADRs, RFCs, estándares |
+| `resources/` | Logos, mockups, íconos, inspiración, capturas — vacío hoy, ver `resources/README.md` |
+| `scripts/` | Despliegue y respaldo del droplet de pruebas (`deploy.sh`, `respaldo.sh`) — ver `scripts/README.md` |
+| `templates/` | Plantillas para arrancar un documento nuevo de `docs/` |
 
 ## Cómo contribuir
 
