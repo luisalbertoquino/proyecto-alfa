@@ -104,6 +104,10 @@ class ProductoService
     /**
      * Genera un slug único dentro del tenant actual, agregando -2, -3...
      * si ya existe (ver docs/standards/database.md: unique(tenant_id, slug)).
+     * Incluye productos borrados (soft delete) en la comprobación: la
+     * columna `slug` sigue siendo única a nivel de base de datos aunque el
+     * producto esté oculto, así que ignorarlos aquí produciría un choque de
+     * slug real al crear.
      */
     private function slugUnico(string $nombre, ?int $ignorarId = null): string
     {
@@ -112,7 +116,8 @@ class ProductoService
         $contador = 2;
 
         while (
-            Producto::where('slug', $slug)
+            Producto::withTrashed()
+                ->where('slug', $slug)
                 ->when($ignorarId, fn ($q) => $q->whereKeyNot($ignorarId))
                 ->exists()
         ) {

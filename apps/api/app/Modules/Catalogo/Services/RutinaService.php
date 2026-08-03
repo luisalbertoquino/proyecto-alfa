@@ -48,6 +48,10 @@ class RutinaService
         $rutina->productos()->sync($conOrden);
     }
 
+    /**
+     * Incluye rutinas borradas (soft delete) en la comprobación de slug —
+     * mismo motivo que en ProductoService::slugUnico().
+     */
     private function slugUnico(string $nombre, ?int $ignorarId = null): string
     {
         $base = Str::slug($nombre);
@@ -55,7 +59,8 @@ class RutinaService
         $contador = 2;
 
         while (
-            Rutina::where('slug', $slug)
+            Rutina::withTrashed()
+                ->where('slug', $slug)
                 ->when($ignorarId, fn ($q) => $q->whereKeyNot($ignorarId))
                 ->exists()
         ) {
